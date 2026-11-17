@@ -51,8 +51,15 @@ jobs:
       - name: Package Linux .deb
         run: |
           APP_NAME="verbovivo"
-          VERSION="${GITHUB_REF_NAME#v}"
-          [ "$VERSION" = "" ] && VERSION="1.0.0"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(awk '/^version:[[:space:]]/ { print $2; exit }' pubspec.yaml)
+          fi
+          if ! dpkg --validate-version "$VERSION"; then
+            echo "::error::Invalid Debian package version: $VERSION"
+            exit 1
+          fi
           ARCH="amd64"
           STAGE_DIR="deb-package/${APP_NAME}_${VERSION}_${ARCH}"
 
