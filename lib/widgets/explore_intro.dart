@@ -6,20 +6,15 @@ class ExploreIntro extends StatelessWidget {
     super.key,
     required this.topic,
     required this.description,
-    required this.controller,
-    required this.onSearch,
     required this.onOpenLink,
     required this.onDraw,
     required this.onExplore,
-    this.focusNode,
     this.strings,
   });
 
   final String? topic;
   final String? description;
-  final TextEditingController controller;
-  final FocusNode? focusNode;
-  final VoidCallback onSearch, onOpenLink, onDraw;
+  final VoidCallback onOpenLink, onDraw;
   final VoidCallback? onExplore;
   final AppStrings? strings;
 
@@ -27,9 +22,8 @@ class ExploreIntro extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = strings ?? AppLocalizations.pt;
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
-    final hero = Container(
+    return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
@@ -128,104 +122,14 @@ class ExploreIntro extends StatelessWidget {
               icon: const Icon(Icons.arrow_forward_rounded, size: 18),
               label: Text(s.exploreTopic),
             ),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
+            onPressed: onOpenLink,
+            icon: const Icon(Icons.link_rounded, size: 18),
+            label: Text(s.playByLink),
+          ),
         ]),
       ]),
     );
-
-    final search = Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-        side: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(26),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.travel_explore_rounded, color: colors.primary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      s.searchTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    Text(
-                      s.searchSubtitle,
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          TextField(
-            controller: controller,
-            focusNode: focusNode,
-            maxLength: 280,
-            maxLines: null,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => onSearch(),
-            decoration: InputDecoration(
-              prefixIcon: const Icon(Icons.search_rounded, size: 22),
-              labelText: s.searchFieldLabel,
-              hintText: s.searchFieldHint,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(spacing: 10, runSpacing: 10, children: [
-            FilledButton.icon(
-              onPressed: onSearch,
-              icon: const Icon(Icons.search_rounded, size: 18),
-              label: Text(s.searchButton),
-            ),
-            OutlinedButton.icon(
-              onPressed: onOpenLink,
-              icon: const Icon(Icons.link_rounded, size: 18),
-              label: Text(s.playByLink),
-            ),
-          ]),
-        ]),
-      ),
-    );
-
-    return LayoutBuilder(builder: (context, constraints) {
-      if (constraints.maxWidth < 820) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            hero,
-            const SizedBox(height: 16),
-            search,
-          ],
-        );
-      }
-      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Expanded(flex: 5, child: hero),
-        const SizedBox(width: 18),
-        Expanded(flex: 4, child: search),
-      ]);
-    });
   }
 }

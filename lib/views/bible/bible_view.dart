@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/reading_library_controller.dart';
 import '../../controllers/settings_controller.dart';
-import '../../models/bible_model.dart';
 import '../../services/app_localizations.dart';
 import '../../services/bible_service.dart';
 import '../../widgets/tv_focusable.dart';
@@ -17,6 +17,7 @@ class BibleView extends StatefulWidget {
 class _BibleViewState extends State<BibleView> {
   final _searchController = TextEditingController();
   final _settings = SettingsController.instance;
+  final _library = ReadingLibraryController.instance;
 
   String _searchQuery = '';
   int _selectedTestament = 0; // 0: Todos, 1: Antigo Testamento, 2: Novo Testamento
@@ -41,6 +42,60 @@ class _BibleViewState extends State<BibleView> {
           preferredTranslation: _settings.bibleTranslation,
         ),
       ),
+    );
+  }
+
+  Future<void> _showBookmarks(AppStrings strings) async {
+    final reference = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(strings.savedChapters),
+        children: [
+          for (final chapter in _library.bookmarks)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(chapter),
+              child: Text(chapter),
+            ),
+        ],
+      ),
+    );
+    if (mounted && reference != null) _openChapter(reference);
+  }
+
+  Widget _buildReadingLibrary(AppStrings strings) {
+    return ListenableBuilder(
+      listenable: _library,
+      builder: (context, _) {
+        final lastRead = _library.lastRead;
+        if (lastRead == null && _library.bookmarks.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Card(
+            child: Column(
+              children: [
+                if (lastRead != null)
+                  ListTile(
+                    leading: const Icon(Icons.history_rounded),
+                    title: Text(strings.continueReading),
+                    subtitle: Text(lastRead),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _openChapter(lastRead),
+                  ),
+                if (_library.bookmarks.isNotEmpty)
+                  ListTile(
+                    leading: const Icon(Icons.bookmarks_outlined),
+                    title: Text(strings.savedChapters),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => _showBookmarks(strings),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -310,6 +365,7 @@ class _BibleViewState extends State<BibleView> {
           ),
         ),
         const SizedBox(height: 20),
+        _buildReadingLibrary(strings),
 
         // Campo de Pesquisa de Trecho ou Livro
         TextField(

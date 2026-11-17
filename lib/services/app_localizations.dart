@@ -10,6 +10,11 @@ class AppStrings {
     required this.searchFieldLabel,
     required this.searchFieldHint,
     required this.searchButton,
+    required this.continueReading,
+    required this.savedChapters,
+    required this.saveChapterBookmark,
+    required this.removeChapterBookmark,
+    required this.bookmarkSaveError,
     required this.playByLink,
     required this.exploreThemeTitle,
     required this.tabVideos,
@@ -72,6 +77,11 @@ class AppStrings {
   final String searchFieldLabel;
   final String searchFieldHint;
   final String searchButton;
+  final String continueReading;
+  final String savedChapters;
+  final String saveChapterBookmark;
+  final String removeChapterBookmark;
+  final String bookmarkSaveError;
   final String playByLink;
   final String exploreThemeTitle;
   final String tabVideos;
@@ -136,6 +146,11 @@ class AppLocalizations {
     searchFieldLabel: 'Tema, versículo ou situação de vida',
     searchFieldHint: 'Ex.: ansiedade no trabalho, luto, perdão ou Salmos 23',
     searchButton: 'Buscar tema',
+    continueReading: 'Continuar leitura',
+    savedChapters: 'Capítulos salvos',
+    saveChapterBookmark: 'Salvar capítulo',
+    removeChapterBookmark: 'Remover marcador',
+    bookmarkSaveError: 'Não foi possível atualizar o marcador.',
     playByLink: 'Reproduzir por link',
     exploreThemeTitle: 'Explore o tema',
     tabVideos: 'Vídeos',
@@ -199,6 +214,11 @@ class AppLocalizations {
     searchFieldLabel: 'Topic, verse or life situation',
     searchFieldHint: 'E.g.: anxiety at work, grief, forgiveness or Psalm 23',
     searchButton: 'Search topic',
+    continueReading: 'Continue reading',
+    savedChapters: 'Saved chapters',
+    saveChapterBookmark: 'Save chapter',
+    removeChapterBookmark: 'Remove bookmark',
+    bookmarkSaveError: 'Could not update the bookmark.',
     playByLink: 'Play by link',
     exploreThemeTitle: 'Explore the topic',
     tabVideos: 'Videos',
@@ -262,6 +282,11 @@ class AppLocalizations {
     searchFieldLabel: 'Tema, versículo o situación de vida',
     searchFieldHint: 'Ej.: ansiedad en el trabajo, duelo, perdón o Salmos 23',
     searchButton: 'Buscar tema',
+    continueReading: 'Continuar lectura',
+    savedChapters: 'Capítulos guardados',
+    saveChapterBookmark: 'Guardar capítulo',
+    removeChapterBookmark: 'Quitar marcador',
+    bookmarkSaveError: 'No se pudo actualizar el marcador.',
     playByLink: 'Reproducir por enlace',
     exploreThemeTitle: 'Explora el tema',
     tabVideos: 'Videos',

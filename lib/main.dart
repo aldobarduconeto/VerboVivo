@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 
+import 'controllers/reading_library_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'views/home/home_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
-  await SettingsController.instance.loadSettings();
+  await Future.wait([
+    SettingsController.instance.loadSettings(),
+    ReadingLibraryController.instance.load(),
+  ]);
   runApp(const VerboVivoApp());
 }
 

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../controllers/chapter_controller.dart';
+import '../../controllers/reading_library_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../models/bible_model.dart';
 import '../../services/app_localizations.dart';
+import '../../services/bible_service.dart' show BibleService;
 
 class ChapterView extends StatefulWidget {
   const ChapterView({
@@ -24,6 +28,8 @@ class ChapterView extends StatefulWidget {
 class _ChapterViewState extends State<ChapterView> {
   late final ChapterController _controller;
   final _settings = SettingsController.instance;
+  final _library = ReadingLibraryController.instance;
+  Future<BibleChapter>? _observedChapter;
 
   @override
   void initState() {
@@ -34,14 +40,42 @@ class _ChapterViewState extends State<ChapterView> {
           initialTranslation: widget.preferredTranslation ?? _settings.bibleTranslation,
           initialFontSize: _settings.fontSize,
         );
+    _controller.addListener(_observeChapter);
+    _observeChapter();
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_observeChapter);
     if (widget.controller == null) {
       _controller.dispose();
     }
     super.dispose();
+  }
+
+  void _observeChapter() {
+    final request = _controller.chapterFuture;
+    if (request == null || identical(request, _observedChapter)) return;
+    _observedChapter = request;
+    final reference = BibleService.normalizeReference(
+      _controller.currentReference,
+    );
+    if (reference == null) return;
+
+    unawaited(request.then<void>((_) {
+      if (mounted && identical(request, _observedChapter)) {
+        unawaited(_library.recordReading(reference));
+      }
+    }, onError: (Object _, StackTrace __) {}));
+  }
+
+  Future<void> _toggleBookmark(String reference, AppStrings strings) async {
+    final saved = await _library.toggleBookmark(reference);
+    if (mounted && !saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.bookmarkSaveError)),
+      );
+    }
   }
 
   void _copyVerse(BibleVerse verse, String chapterTitle) {
@@ -76,19 +110,33 @@ class _ChapterViewState extends State<ChapterView> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_controller, _library]),
       builder: (context, _) {
         final strings = AppLocalizations.of(_settings.language);
         final theme = Theme.of(context);
         final colors = theme.colorScheme;
         final prev = _controller.previousChapter;
         final next = _controller.nextChapter;
+        final reference = BibleService.normalizeReference(
+          _controller.currentReference,
+        );
+        final bookmarked = _library.bookmarks.contains(reference);
 
         return Scaffold(
           appBar: AppBar(
             title: Text(_controller.currentReference,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             actions: [
+              if (reference != null)
+                IconButton(
+                  tooltip: bookmarked
+                      ? strings.removeChapterBookmark
+                      : strings.saveChapterBookmark,
+                  onPressed: () => _toggleBookmark(reference, strings),
+                  icon: Icon(
+                    bookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  ),
+                ),
               PopupMenuButton<String>(
                 tooltip: strings.preferredTranslation,
                 icon: const Icon(Icons.translate_rounded),

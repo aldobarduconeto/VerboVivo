@@ -18,17 +18,11 @@ class BibleStudyView extends StatefulWidget {
     super.key,
     required this.controller,
     required this.settings,
-    required this.topicController,
-    required this.topicFocusNode,
-    required this.onSearch,
     this.onNavigateToAngel,
   });
 
   final HomeController controller;
   final SettingsController settings;
-  final TextEditingController topicController;
-  final FocusNode topicFocusNode;
-  final VoidCallback onSearch;
   final VoidCallback? onNavigateToAngel;
 
   @override
@@ -114,9 +108,6 @@ class _BibleStudyViewState extends State<BibleStudyView> {
                 ExploreIntro(
                   topic: selected?.title,
                   description: selected?.description,
-                  controller: widget.topicController,
-                  focusNode: widget.topicFocusNode,
-                  onSearch: widget.onSearch,
                   onOpenLink: _openVideoLink,
                   onDraw: _controller.drawTopic,
                   strings: strings,

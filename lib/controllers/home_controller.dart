@@ -73,6 +73,10 @@ class HomeController extends ChangeNotifier {
     final trimmed = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (trimmed.isEmpty) return false;
 
+    if (_mainTab != 0) {
+      _mainTab = 0;
+      _currentTab = 0;
+    }
     _selectedTopic = _recommendations.topicFor(trimmed);
     _customTopic = true;
     _confirmed = true;

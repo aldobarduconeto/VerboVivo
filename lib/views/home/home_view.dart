@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../controllers/home_controller.dart';
@@ -103,7 +104,6 @@ class _HomeViewState extends State<HomeView> {
             }
           },
           onSearchRequested: () {
-            _controller.setMainTab(0);
             _topicFocusNode.requestFocus();
           },
           onToggleTvMode: () => _settings.setTvMode(!_settings.tvMode),
@@ -111,11 +111,19 @@ class _HomeViewState extends State<HomeView> {
             builder: (context, constraints) {
               final isLargeScreen = constraints.maxWidth >= 720 || _settings.tvMode;
 
+              final hasNativeTitleBar = !kIsWeb && switch (theme.platform) {
+                TargetPlatform.windows ||
+                TargetPlatform.linux ||
+                TargetPlatform.macOS => true,
+                _ => false,
+              };
+              final inlineSearch = hasNativeTitleBar && constraints.maxWidth >= 720;
+              final searchField = _buildSearchField(strings);
+
               return Scaffold(
                 appBar: AppBar(
                   titleSpacing: 16,
                   title: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         decoration: BoxDecoration(
@@ -149,14 +157,27 @@ class _HomeViewState extends State<HomeView> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        strings.appTitle,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 19,
-                          letterSpacing: -0.5,
+                      if (!hasNativeTitleBar)
+                        Flexible(
+                          child: Text(
+                            strings.appTitle,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 19,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
                         ),
-                      ),
+                      if (inlineSearch)
+                        Expanded(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 520),
+                              child: searchField,
+                            ),
+                          ),
+                        ),
                       if (_settings.tvMode) ...[
                         const SizedBox(width: 10),
                         Container(
@@ -191,6 +212,15 @@ class _HomeViewState extends State<HomeView> {
                       ],
                     ],
                   ),
+                  bottom: inlineSearch
+                      ? null
+                      : PreferredSize(
+                          preferredSize: const Size.fromHeight(60),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                            child: searchField,
+                          ),
+                        ),
                   actions: [
                     IconButton.filledTonal(
                       tooltip: _settings.tvMode ? 'Desativar Modo TV' : 'Ativar Modo TV',
@@ -249,6 +279,28 @@ class _HomeViewState extends State<HomeView> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSearchField(AppStrings strings) {
+    return TextField(
+      controller: _topicController,
+      focusNode: _topicFocusNode,
+      maxLength: 280,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _onSearch(),
+      decoration: InputDecoration(
+        isDense: true,
+        counterText: '',
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        hintText: strings.searchFieldHint,
+        labelText: strings.searchFieldLabel,
+        suffixIcon: IconButton(
+          tooltip: strings.searchButton,
+          onPressed: _onSearch,
+          icon: const Icon(Icons.search_rounded),
+        ),
+      ),
     );
   }
 
@@ -374,9 +426,6 @@ class _HomeViewState extends State<HomeView> {
         BibleStudyView(
           controller: _controller,
           settings: _settings,
-          topicController: _topicController,
-          topicFocusNode: _topicFocusNode,
-          onSearch: _onSearch,
           onNavigateToAngel: () => _controller.setMainTab(2),
         ),
         const BibleView(),
