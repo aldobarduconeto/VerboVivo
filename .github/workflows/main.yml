@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Install Linux build dependencies
         run: |
@@ -168,10 +168,20 @@ jobs:
         run: flutter build macos --release
 
       - name: Create DMG
+        shell: bash
         run: |
-          npm install --global create-dmg
-          create-dmg "build/macos/Build/Products/Release/verbovivo.app" . || true
-          mv *.dmg verbovivo-macos.dmg
+          shopt -s nullglob
+          apps=(build/macos/Build/Products/Release/*.app)
+          if [[ ${#apps[@]} -ne 1 || ! -d "${apps[0]}" ]]; then
+            echo "::error::Expected exactly one macOS app in the Release build directory."
+            exit 1
+          fi
+
+          staging=$(mktemp -d)
+          trap 'rm -rf -- "$staging"' EXIT
+          ditto "${apps[0]}" "$staging/${apps[0]##*/}"
+          ln -s /Applications "$staging/Applications"
+          hdiutil create -volname VerboVivo -srcfolder "$staging" -format UDZO verbovivo-macos.dmg
 
       # Build iOS IPA (unsigned payload)
       - name: Build iOS App

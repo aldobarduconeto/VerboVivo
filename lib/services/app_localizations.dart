@@ -3,6 +3,8 @@ class AppStrings {
     required this.appTitle,
     required this.reflectionMoments,
     required this.drawTopic,
+    required this.studyWelcomeTitle,
+    required this.studyWelcomeDescription,
     required this.drawAnotherTopic,
     required this.exploreTopic,
     required this.searchTitle,
@@ -70,6 +72,8 @@ class AppStrings {
   final String appTitle;
   final String reflectionMoments;
   final String drawTopic;
+  final String studyWelcomeTitle;
+  final String studyWelcomeDescription;
   final String drawAnotherTopic;
   final String exploreTopic;
   final String searchTitle;
@@ -139,6 +143,8 @@ class AppLocalizations {
     appTitle: 'VerboVivo',
     reflectionMoments: 'MOMENTO DE REFLEXÃO',
     drawTopic: 'Sortear tema',
+    studyWelcomeTitle: 'Um novo olhar para a Palavra',
+    studyWelcomeDescription: 'Encontre um tema bíblico para estudar, ouvir e refletir.',
     drawAnotherTopic: 'Sortear outro tema',
     exploreTopic: 'Explorar tema',
     searchTitle: 'Pesquise seu tema',
@@ -207,6 +213,8 @@ class AppLocalizations {
     appTitle: 'VerboVivo',
     reflectionMoments: 'MOMENT OF REFLECTION',
     drawTopic: 'Random topic',
+    studyWelcomeTitle: 'A fresh look at the Word',
+    studyWelcomeDescription: 'Find a biblical theme to study, listen to and reflect on.',
     drawAnotherTopic: 'Next topic',
     exploreTopic: 'Explore topic',
     searchTitle: 'Search your topic',
@@ -275,6 +283,8 @@ class AppLocalizations {
     appTitle: 'VerboVivo',
     reflectionMoments: 'MOMENTO DE REFLEXIÓN',
     drawTopic: 'Sortear tema',
+    studyWelcomeTitle: 'Una nueva mirada a la Palabra',
+    studyWelcomeDescription: 'Encuentra un tema bíblico para estudiar, escuchar y reflexionar.',
     drawAnotherTopic: 'Sortear otro tema',
     exploreTopic: 'Explorar tema',
     searchTitle: 'Busca tu tema',

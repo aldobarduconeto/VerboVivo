@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'controllers/reading_library_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'views/home/home_view.dart';
+import 'widgets/desktop_window_frame.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  if (isDesktopWindow) {
+    await windowManager.ensureInitialized();
+    await windowManager.setTitleBarStyle(
+      TitleBarStyle.hidden,
+      windowButtonVisibility: false,
+    );
+    await windowManager.setMinimumSize(const Size(360, 480));
+  }
   await Future.wait([
     SettingsController.instance.loadSettings(),
     ReadingLibraryController.instance.load(),
@@ -33,6 +43,8 @@ class VerboVivoApp extends StatelessWidget {
           themeMode: settings.themeMode,
           theme: _buildTheme(Brightness.light, settings),
           darkTheme: _buildTheme(Brightness.dark, settings),
+          builder: (context, child) =>
+              isDesktopWindow ? DesktopWindowFrame(child: child!) : child!,
           home: HomeScreen(
             onToggleTheme: () {
               final newMode = settings.themeMode == ThemeMode.dark
@@ -86,7 +98,7 @@ class VerboVivoApp extends StatelessWidget {
       );
     }
 
-    final bg = isDark ? const Color(0xFF0C1014) : const Color(0xFFF7F9FC);
+    final bg = isDark ? const Color(0xFF101612) : const Color(0xFFF6F7F3);
 
     final fieldBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
@@ -116,24 +128,26 @@ class VerboVivoApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(
         elevation: settings.highContrast ? 2 : 0,
-        color: isDark ? const Color(0xFF141A22) : Colors.white,
+        color:
+            settings.highContrast ? colors.surface : colors.surfaceContainerLow,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(20),
           side: settings.highContrast
               ? BorderSide(color: colors.outline, width: 1.5)
               : BorderSide(
-                  color: colors.outlineVariant.withValues(alpha: isDark ? 0.12 : 0.35),
+                  color: colors.outlineVariant
+                      .withValues(alpha: isDark ? 0.12 : 0.35),
                   width: 1,
                 ),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: isDark ? const Color(0xFF10151C) : Colors.white,
+        backgroundColor: colors.surface,
         elevation: 0,
         height: 68,
-        indicatorColor: colors.primary.withValues(alpha: isDark ? 0.22 : 0.14),
+        indicatorColor: colors.primaryContainer,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
@@ -154,24 +168,26 @@ class VerboVivoApp extends StatelessWidget {
         style: FilledButton.styleFrom(
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          textStyle:
+              const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.4)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark
-            ? const Color(0xFF171E28)
-            : const Color(0xFFEEF2F6),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        fillColor: colors.surfaceContainerHighest,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: fieldBorder,
         enabledBorder: fieldBorder,
         focusedBorder: fieldBorder.copyWith(

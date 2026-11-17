@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../controllers/home_controller.dart';
@@ -31,6 +30,7 @@ class _HomeViewState extends State<HomeView> {
   late final HomeController _controller;
   final _topicController = TextEditingController();
   final _topicFocusNode = FocusNode();
+  final _searchFieldKey = GlobalKey();
   final _settings = SettingsController.instance;
 
   @override
@@ -61,7 +61,8 @@ class _HomeViewState extends State<HomeView> {
     }
     if (query.length > 280) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('O tema deve ter no máximo 280 caracteres.')),
+        const SnackBar(
+            content: Text('O tema deve ter no máximo 280 caracteres.')),
       );
       return;
     }
@@ -109,104 +110,47 @@ class _HomeViewState extends State<HomeView> {
           onToggleTvMode: () => _settings.setTvMode(!_settings.tvMode),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isLargeScreen = constraints.maxWidth >= 720 || _settings.tvMode;
-
-              final hasNativeTitleBar = !kIsWeb && switch (theme.platform) {
-                TargetPlatform.windows ||
-                TargetPlatform.linux ||
-                TargetPlatform.macOS => true,
-                _ => false,
-              };
-              final inlineSearch = hasNativeTitleBar && constraints.maxWidth >= 720;
-              final searchField = _buildSearchField(strings);
+              final inlineSearch = constraints.maxWidth >= 720;
+              final search = _buildSearchField(strings);
 
               return Scaffold(
                 appBar: AppBar(
-                  titleSpacing: 16,
+                  backgroundColor: colors.surface,
+                  toolbarHeight: 66,
+                  titleSpacing: 20,
+                  shape: Border(
+                    bottom: BorderSide(color: colors.outlineVariant),
+                  ),
                   title: Row(
                     children: [
                       Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [colors.primary, colors.tertiary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          color: colors.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colors.primary.withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            _controller.mainTab == 1
-                                ? Icons.menu_book_rounded
-                                : _controller.mainTab == 2
-                                    ? Icons.movie_filter_rounded
-                                    : _controller.mainTab == 3
-                                        ? Icons.settings_rounded
-                                        : Icons.auto_stories_rounded,
-                            color: colors.onPrimary,
-                            size: 20,
-                          ),
+                        child: Icon(
+                          Icons.auto_stories_rounded,
+                          size: 20,
+                          color: colors.onPrimaryContainer,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      if (!hasNativeTitleBar)
-                        Flexible(
-                          child: Text(
-                            strings.appTitle,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 19,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          strings.appTitle,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      if (inlineSearch)
+                      ),
+                      if (inlineSearch) ...[
+                        const SizedBox(width: 24),
                         Expanded(
+                          flex: 3,
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              child: searchField,
+                              constraints: const BoxConstraints(maxWidth: 480),
+                              child: search,
                             ),
-                          ),
-                        ),
-                      if (_settings.tvMode) ...[
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.primary.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.tv_rounded, size: 14, color: colors.onPrimary),
-                              const SizedBox(width: 5),
-                              Text(
-                                'MODO TV',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.onPrimary,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
                       ],
@@ -217,62 +161,47 @@ class _HomeViewState extends State<HomeView> {
                       : PreferredSize(
                           preferredSize: const Size.fromHeight(60),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                            child: searchField,
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                            child: search,
                           ),
                         ),
                   actions: [
-                    IconButton.filledTonal(
-                      tooltip: _settings.tvMode ? 'Desativar Modo TV' : 'Ativar Modo TV',
-                      style: IconButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                    IconButton(
+                      tooltip: _settings.tvMode
+                          ? 'Desativar Modo TV'
+                          : 'Ativar Modo TV',
+                      isSelected: _settings.tvMode,
                       onPressed: () => _settings.setTvMode(!_settings.tvMode),
-                      icon: Icon(
-                        _settings.tvMode ? Icons.tv_rounded : Icons.tv_off_outlined,
-                        color: _settings.tvMode ? colors.primary : null,
-                        size: 20,
-                      ),
+                      selectedIcon: const Icon(Icons.tv_rounded),
+                      icon: const Icon(Icons.tv_off_outlined),
                     ),
-                    const SizedBox(width: 4),
-                    IconButton.filledTonal(
+                    IconButton(
                       tooltip: 'Alternar tema',
-                      style: IconButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
                       onPressed: widget.onToggleTheme,
                       icon: Icon(
                         widget.dark
                             ? Icons.light_mode_outlined
                             : Icons.dark_mode_outlined,
-                        size: 20,
                       ),
                     ),
-                    if (!isLargeScreen && _controller.mainTab != 3) ...[
-                      const SizedBox(width: 4),
-                      IconButton.filledTonal(
-                        tooltip: strings.settingsTitle,
-                        style: IconButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () => _controller.setMainTab(3),
-                        icon: const Icon(Icons.settings_outlined, size: 20),
-                      ),
-                    ],
                     const SizedBox(width: 12),
                   ],
                 ),
-                bottomNavigationBar: _buildBottomBar(strings, colors, isLargeScreen),
+                bottomNavigationBar:
+                    _buildBottomBar(strings, colors, inlineSearch),
                 body: SafeArea(
-                  child: isLargeScreen
-                      ? Row(
-                          children: [
-                            _buildNavigationRail(strings, colors, constraints),
-                            const VerticalDivider(width: 1, thickness: 1),
-                            Expanded(child: _buildBodyContent()),
-                          ],
-                        )
-                      : _buildBodyContent(),
+                  child: Row(
+                    children: [
+                      if (inlineSearch) ...[
+                        _buildNavigationRail(strings, colors, constraints),
+                        const VerticalDivider(width: 1, thickness: 1),
+                      ],
+                      Expanded(
+                        key: const ValueKey('main-content'),
+                        child: _buildBodyContent(),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -284,6 +213,7 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildSearchField(AppStrings strings) {
     return TextField(
+      key: _searchFieldKey,
       controller: _topicController,
       focusNode: _topicFocusNode,
       maxLength: 280,
@@ -292,7 +222,8 @@ class _HomeViewState extends State<HomeView> {
       decoration: InputDecoration(
         isDense: true,
         counterText: '',
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         hintText: strings.searchFieldHint,
         labelText: strings.searchFieldLabel,
         suffixIcon: IconButton(
@@ -304,7 +235,8 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget? _buildBottomBar(AppStrings strings, ColorScheme colors, bool isLargeScreen) {
+  Widget? _buildBottomBar(
+      AppStrings strings, ColorScheme colors, bool isLargeScreen) {
     final tvHint = _settings.tvMode
         ? Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -314,14 +246,15 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 Icon(Icons.gamepad_rounded, size: 16, color: colors.primary),
                 const SizedBox(width: 8),
-                Text(
+                Flexible(
+                    child: Text(
                   'D-pad: Navegar • A/OK: Selecionar • L1/R1: Abas • B: Voltar • Y: Modo TV',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: colors.onSurfaceVariant,
                   ),
-                ),
+                )),
               ],
             ),
           )
@@ -386,6 +319,9 @@ class _HomeViewState extends State<HomeView> {
       onPressed: () {},
       borderRadius: BorderRadius.zero,
       child: NavigationRail(
+        backgroundColor: colors.surface,
+        scrollable: true,
+        indicatorColor: colors.primaryContainer,
         selectedIndex: _controller.mainTab,
         onDestinationSelected: _controller.setMainTab,
         extended: isExtended,
