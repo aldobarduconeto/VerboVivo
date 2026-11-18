@@ -42,7 +42,9 @@ jobs:
 
       # Build APK
       - name: Build Android APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk verbovivo-android.apk
 
       # Build Linux Desktop & Package .deb
       - name: Build Linux Desktop
@@ -98,7 +100,7 @@ jobs:
         with:
           name: ubuntu-artifacts
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
+            verbovivo-android.apk
             verbovivo-linux.deb
 
   # ==========================================
@@ -228,7 +230,10 @@ jobs:
       - name: Standardize Filenames
         run: |
           cd release_assets
-          [ -f "app-release.apk" ] && mv app-release.apk verbovivo-android.apk
+          if [ ! -f "verbovivo-android.apk" ]; then
+            found_apk=$(find . -name "*.apk" | head -n 1)
+            [ -n "$found_apk" ] && mv "$found_apk" verbovivo-android.apk
+          fi
           ls -la
 
       - name: Create GitHub Release
@@ -239,6 +244,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             release_assets/verbovivo-android.apk
             release_assets/verbovivo-linux.deb
