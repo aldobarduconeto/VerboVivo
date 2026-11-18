@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../models/angel_model.dart';
 import '../../../services/youtube_stream_service.dart';
 import '../../../widgets/tv_focusable.dart';
+import '../../family/family_guide_dialog.dart';
 
 class AngelCard extends StatelessWidget {
   const AngelCard({
@@ -243,6 +244,29 @@ class AngelCard extends StatelessWidget {
                         textStyle: TextStyle(
                           fontSize: isTvMode ? 14 : 13,
                           fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => FamilyGuideDialog.show(
+                        context,
+                        mediaId: item.id,
+                        title: item.title,
+                      ),
+                      icon: const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 14)),
+                      label: const Text('Debate em Família'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isTvMode ? 12 : 9,
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: isTvMode ? 13 : 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

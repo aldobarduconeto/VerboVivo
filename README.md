@@ -19,6 +19,9 @@ O **VerboVivo** é um aplicativo de última geração construído em **Flutter**
   - [5. Podcasts Cristãos Integrados](#5-podcasts-cristãos-integrados)
   - [6. Modo TV & Controle Remoto / Gamepads (Interface 10 Pés)](#6-modo-tv--controle-remoto--gamepads-interface-10-pés)
   - [7. Central de Configurações e Acessibilidade](#7-central-de-configurações-e-acessibilidade)
+  - [8. Jornada Devocional Diária & Estúdio de Cards de Fé](#8-jornada-devocional-diária--estúdio-de-cards-de-fé)
+  - [9. Diário Espiritual, Mural de Oração & Marcador Colorido](#9-diário-espiritual-mural-de-oração--marcador-colorido)
+  - [10. Modo Culto Doméstico & Momento Família na TV](#10-modo-culto-doméstico--momento-família-na-tv)
 - [Otimizações de Desempenho e Caching](#-otimizações-de-desempenho-e-caching)
 - [Tecnologias e Dependências](#-tecnologias-e-dependências)
 - [Como Executar e Compilar](#-como-executar-e-compilar)
@@ -201,6 +204,24 @@ Arquivos: [`lib/views/settings/settings_view.dart`](lib/views/settings/settings_
 * **Modo Alto Contraste:** Otimiza o contraste das fontes, reforça as bordas de cards e inputs e desativa gradientes.
 * **Internacionalização Dinâmica:** Suporte a **Português**, **Inglês** e **Espanhol**.
 * **Gestão de Cache:** Indicador de capítulos em cache e botão de limpeza instantânea.
+
+### 8. Jornada Devocional Diária & Estúdio de Cards de Fé
+Arquivos: [`lib/views/devotional/devotional_dialog.dart`](lib/views/devotional/devotional_dialog.dart), [`lib/views/devotional/devotional_banner_card.dart`](lib/views/devotional/devotional_banner_card.dart), [`lib/views/verse_studio/verse_studio_sheet.dart`](lib/views/verse_studio/verse_studio_sheet.dart), [`lib/controllers/devotional_controller.dart`](lib/controllers/devotional_controller.dart) e [`lib/services/devotional_service.dart`](lib/services/devotional_service.dart)
+
+* **Devocional Diário com Constância Espiritual:** Meditação diária com Versículo Chave, Reflexão, Oração Guiada e Aplicação Prática, com rastreador de dias consecutivos (streak 🔥) persistido localmente.
+* **Estúdio de Cards de Fé (Shareable Verse Studio):** Gerador de artes visuais para versículos com 4 temas estéticos (*Esmeralda Sagrada*, *Céu Ardósia*, *Amanhecer Dourado*, *Papiro Minimalista*), alternância de proporção (9:16 Stories ou 1:1 Quadrado Feed) e tipografia Serif/Sans para compartilhamento em redes sociais.
+
+### 9. Diário Espiritual, Mural de Oração & Marcador Colorido
+Arquivos: [`lib/views/journal/journal_view.dart`](lib/views/journal/journal_view.dart), [`lib/controllers/journal_controller.dart`](lib/controllers/journal_controller.dart) e [`lib/models/journal_model.dart`](lib/models/journal_model.dart)
+
+* **Marcadores Temáticos na Leitura Bíblica:** Destaque de versículos no leitor com 4 eixos cromáticos: *🟡 Promessa de Deus*, *🟢 Gratidão & Louvor*, *🔵 Paz & Esperança* e *🔴 Sabedoria & Instrução*.
+* **Mural de Oração com Histórico de Gratidão:** Cadastro de motivos de oração com versículo âncora, acompanhamento de pedidos ativos e celebração com data ao marcar pedidos como respondidos (*Testemunhos*).
+
+### 10. Modo Culto Doméstico & Momento Família na TV
+Arquivos: [`lib/views/family/family_guide_dialog.dart`](lib/views/family/family_guide_dialog.dart), [`lib/views/family/worship_ambient_view.dart`](lib/views/family/worship_ambient_view.dart) e [`lib/services/family_guide_service.dart`](lib/services/family_guide_service.dart)
+
+* **Debate em Família para Cinema Angel Studios:** Guias integrados para os episódios de *The Chosen*, animações de *O Jovem Davi* e filmes como *Bonhoeffer* e *His Only Son*, com 3 perguntas para reflexão familiar, oração conjunta e desafio prático da semana.
+* **Telão de Louvor (Modo Culto Doméstico):** Exibição imersiva com tipografia ampliada de letras de louvores congregacionais e passagens bíblicas para cantar em família na Smart TV ou em reuniões de células.
 
 ---
 

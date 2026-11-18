@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/journal_controller.dart';
 import '../../controllers/reading_library_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../services/app_localizations.dart';
 import '../../services/bible_service.dart';
 import '../../widgets/tv_focusable.dart';
 import '../chapter/chapter_view.dart';
+import '../journal/journal_view.dart';
 
 class BibleView extends StatefulWidget {
   const BibleView({super.key});
@@ -64,12 +66,11 @@ class _BibleViewState extends State<BibleView> {
 
   Widget _buildReadingLibrary(AppStrings strings) {
     return ListenableBuilder(
-      listenable: _library,
+      listenable: Listenable.merge([_library, JournalController.instance]),
       builder: (context, _) {
         final lastRead = _library.lastRead;
-        if (lastRead == null && _library.bookmarks.isEmpty) {
-          return const SizedBox.shrink();
-        }
+        final prayers = JournalController.instance.activePrayers.length;
+        final highlights = JournalController.instance.allHighlights.length;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 20),
@@ -91,6 +92,13 @@ class _BibleViewState extends State<BibleView> {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showBookmarks(strings),
                   ),
+                ListTile(
+                  leading: const Icon(Icons.volunteer_activism_rounded, color: Colors.amber),
+                  title: const Text('Diário de Fé & Mural de Oração'),
+                  subtitle: Text('$prayers orações ativas • $highlights versículos destacados'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => JournalView.show(context),
+                ),
               ],
             ),
           ),

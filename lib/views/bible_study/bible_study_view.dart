@@ -10,6 +10,8 @@ import '../../widgets/responsive_media_grid.dart';
 import '../../widgets/tv_focusable.dart';
 import '../../widgets/video_card.dart';
 import '../chapter/chapter_view.dart';
+import '../devotional/devotional_banner_card.dart';
+import '../family/worship_ambient_view.dart';
 import '../player/player_view.dart';
 import '../player/podcast_player_view.dart';
 
@@ -105,6 +107,8 @@ class _BibleStudyViewState extends State<BibleStudyView> {
             child: ListView(
               padding: EdgeInsets.fromLTRB(margin, 16, margin, 32),
               children: [
+                const DevotionalBannerCard(),
+                const SizedBox(height: 18),
                 ExploreIntro(
                   topic: selected?.title,
                   description: selected?.description,
@@ -435,7 +439,7 @@ class _BibleStudyViewState extends State<BibleStudyView> {
             ),
           );
         }
-        return ResponsiveMediaGrid(children: [
+        final grid = ResponsiveMediaGrid(children: [
           for (final video in items)
             VideoCard(
               video: video,
@@ -444,6 +448,71 @@ class _BibleStudyViewState extends State<BibleStudyView> {
               ),
             ),
         ]);
+
+        if (_controller.currentTab == 1) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TvFocusable(
+                onPressed: () => WorshipAmbientView.show(context),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0F382C), Color(0xFF08221B)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFF4CA83).withValues(alpha: 0.4),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4CA83).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.tv_rounded, color: Color(0xFFF4CA83), size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Modo Culto Doméstico • Telão de Louvor',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              'Projete na Smart TV letras grandes para cantar em família',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFF4CA83), size: 14),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              grid,
+            ],
+          );
+        }
+
+        return grid;
       },
     );
   }

@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
-import '../../models/media_model.dart';
 import '../../services/youtube_stream_service.dart';
+import '../family/family_guide_dialog.dart';
 
 class PlayerView extends StatefulWidget {
   const PlayerView({super.key, required this.video, this.resolveStream});
@@ -83,7 +83,7 @@ class _PlayerViewState extends State<PlayerView> {
           logLevel: MPVLogLevel.error,
         ),
       );
-      final controller = _controller = VideoController(
+      _controller = VideoController(
         player,
         configuration: const VideoControllerConfiguration(
           enableHardwareAcceleration: true,
@@ -212,7 +212,21 @@ class _PlayerViewState extends State<PlayerView> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(widget.video.title, maxLines: 1)),
+        appBar: AppBar(
+          title: Text(widget.video.title, maxLines: 1),
+          actions: [
+            TextButton.icon(
+              onPressed: () => FamilyGuideDialog.show(
+                context,
+                mediaId: widget.video.id,
+                title: widget.video.title,
+              ),
+              icon: const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 16)),
+              label: const Text('Momento Família'),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
         body: Focus(
           focusNode: _playerFocusNode,
           autofocus: true,

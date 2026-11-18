@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../controllers/chapter_controller.dart';
+import '../../controllers/journal_controller.dart';
 import '../../controllers/reading_library_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../models/bible_model.dart';
 import '../../services/app_localizations.dart';
 import '../../services/bible_service.dart' show BibleService;
+import '../verse_studio/verse_studio_sheet.dart';
 
 class ChapterView extends StatefulWidget {
   const ChapterView({
@@ -29,6 +31,7 @@ class _ChapterViewState extends State<ChapterView> {
   late final ChapterController _controller;
   final _settings = SettingsController.instance;
   final _library = ReadingLibraryController.instance;
+  final _journal = JournalController.instance;
   Future<BibleChapter>? _observedChapter;
 
   @override
@@ -107,10 +110,252 @@ class _ChapterViewState extends State<ChapterView> {
     );
   }
 
+  void _showVerseActionSheet(BibleVerse verse, String chapterTitle) {
+    final colors = Theme.of(context).colorScheme;
+    final verseRef = '$chapterTitle:${verse.number}';
+    final existing = _journal.getHighlight(chapterTitle, verse.number);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Container(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  verseRef,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: colors.primary,
+                  ),
+                ),
+                Text(
+                  '${_controller.currentTranslation}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '“${verse.text}”',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13.5),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Destacar com Cor Temática:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildColorHighlightButton('gold', Colors.amber, 'Promessa', chapterTitle, verse),
+                _buildColorHighlightButton('green', Colors.green, 'Gratidão', chapterTitle, verse),
+                _buildColorHighlightButton('blue', Colors.blue, 'Esperança', chapterTitle, verse),
+                _buildColorHighlightButton('rose', Colors.pinkAccent, 'Sabedoria', chapterTitle, verse),
+                if (existing != null)
+                  IconButton.filledTonal(
+                    tooltip: 'Remover destaque',
+                    onPressed: () {
+                      _journal.removeHighlight(chapterTitle, verse.number);
+                      Navigator.of(sheetContext).pop();
+                    },
+                    icon: const Icon(Icons.format_color_reset_rounded, size: 20),
+                  ),
+              ],
+            ),
+            const Divider(height: 28),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      VerseStudioSheet.show(
+                        context,
+                        reference: verseRef,
+                        text: verse.text,
+                      );
+                    },
+                    icon: const Icon(Icons.palette_outlined, size: 18),
+                    label: const Text('Criar Card'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      _showAddToPrayerDialog(verse, chapterTitle);
+                    },
+                    icon: const Icon(Icons.volunteer_activism_rounded, size: 18),
+                    label: const Text('Orar por Isso'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                Navigator.of(sheetContext).pop();
+                _copyVerse(verse, chapterTitle);
+              },
+              icon: const Icon(Icons.copy_rounded, size: 18),
+              label: const Text('Copiar Versículo'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColorHighlightButton(
+    String key,
+    Color color,
+    String label,
+    String chapterTitle,
+    BibleVerse verse,
+  ) {
+    final existing = _journal.getHighlight(chapterTitle, verse.number);
+    final isSelected = existing?.colorKey == key;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          onTap: () {
+            _journal.setHighlight(
+              chapterReference: chapterTitle,
+              verseNumber: verse.number,
+              reference: '$chapterTitle:${verse.number}',
+              text: verse.text,
+              colorKey: key,
+            );
+            Navigator.of(context).pop();
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? Colors.white : Colors.transparent,
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: isSelected
+                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                : null,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+        ),
+      ],
+    );
+  }
+
+  void _showAddToPrayerDialog(BibleVerse verse, String chapterTitle) {
+    final titleController = TextEditingController(text: 'Meditação em $chapterTitle:${verse.number}');
+    final descController = TextEditingController(text: '“${verse.text}”\n\nSenhor, ');
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.volunteer_activism_rounded, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Adicionar ao Diário de Oração'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Motivo da Oração'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: 'Minha Oração'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (titleController.text.trim().isEmpty) return;
+              await _journal.addPrayer(
+                title: titleController.text,
+                description: descController.text,
+                scriptureReference: '$chapterTitle:${verse.number}',
+              );
+              if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Pedido adicionado ao Mural de Oração! 🙏'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Salvar Oração'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _library]),
+      animation: Listenable.merge([_controller, _library, _journal]),
       builder: (context, _) {
         final strings = AppLocalizations.of(_settings.language);
         final theme = Theme.of(context);
@@ -290,11 +535,44 @@ class _ChapterViewState extends State<ChapterView> {
 
                         // Lista de versículos
                         ...chapter.verses.map((verse) {
+                          final highlight = _journal.getHighlight(chapter.reference, verse.number);
+                          Color? highlightColor;
+                          if (highlight != null) {
+                            switch (highlight.colorKey) {
+                              case 'gold':
+                                highlightColor = Colors.amber;
+                                break;
+                              case 'green':
+                                highlightColor = Colors.green;
+                                break;
+                              case 'blue':
+                                highlightColor = Colors.blue;
+                                break;
+                              case 'rose':
+                                highlightColor = Colors.pinkAccent;
+                                break;
+                            }
+                          }
+
                           return InkWell(
-                            onLongPress: () => _copyVerse(verse, chapter.reference),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            onTap: () => _showVerseActionSheet(verse, chapter.reference),
+                            onLongPress: () => _showVerseActionSheet(verse, chapter.reference),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 2),
+                              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                              decoration: highlightColor != null
+                                  ? BoxDecoration(
+                                      color: highlightColor.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border(
+                                        left: BorderSide(
+                                          color: highlightColor,
+                                          width: 3.5,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -307,7 +585,7 @@ class _ChapterViewState extends State<ChapterView> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.w800,
                                         fontSize: (_controller.fontSize * 0.78).clamp(11, 20),
-                                        color: colors.primary,
+                                        color: highlightColor ?? colors.primary,
                                       ),
                                     ),
                                   ),
