@@ -43,7 +43,7 @@ jobs:
       # Build APK
       - name: Build Android APK
         run: |
-          flutter build apk --release
+          flutter build apk --release --android-skip-build-dependency-validation
           cp build/app/outputs/flutter-apk/app-release.apk verbovivo-android.apk
 
       # Build Linux Desktop & Package .deb
