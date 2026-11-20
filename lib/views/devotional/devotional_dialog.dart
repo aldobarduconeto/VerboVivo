@@ -32,6 +32,7 @@ class DevotionalDialog extends StatelessWidget {
     final media = MediaQuery.of(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return AnimatedBuilder(
       animation: controller,
@@ -56,7 +57,7 @@ class DevotionalDialog extends StatelessWidget {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: colors.outlineVariant,
+                    color: colors.outlineVariant.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -95,9 +96,12 @@ class DevotionalDialog extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.2),
+                                  color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.2),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.4)),
+                                  border: Border.all(
+                                    color: (isDark ? Colors.amber.shade300 : Colors.amber.shade700)
+                                        .withValues(alpha: 0.4),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -108,7 +112,7 @@ class DevotionalDialog extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.amber.shade900,
+                                        color: isDark ? Colors.amber.shade300 : Colors.amber.shade900,
                                       ),
                                     ),
                                   ],

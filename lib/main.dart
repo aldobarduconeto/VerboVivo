@@ -96,20 +96,36 @@ class VerboVivoApp extends StatelessWidget {
               outlineVariant: Color(0xFF555555),
             );
     } else {
-      colors = ColorScheme.fromSeed(
+      final baseColors = ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
       );
+      colors = isDark
+          ? baseColors.copyWith(
+              surface: const Color(0xFF13181F),
+              surfaceContainerLow: const Color(0xFF171E26),
+              surfaceContainer: const Color(0xFF1B232D),
+              surfaceContainerHigh: const Color(0xFF212A36),
+              surfaceContainerHighest: const Color(0xFF283341),
+            )
+          : baseColors.copyWith(
+              surface: const Color(0xFFFFFFFF),
+              surfaceContainerLowest: const Color(0xFFFFFFFF),
+              surfaceContainerLow: const Color(0xFFF8F9FA),
+              surfaceContainer: const Color(0xFFF1F3F5),
+              surfaceContainerHigh: const Color(0xFFEAEDF1),
+              surfaceContainerHighest: const Color(0xFFE2E6EA),
+            );
     }
 
-    final bg = isDark ? const Color(0xFF101612) : const Color(0xFFF6F7F3);
+    final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFF8F9FA);
 
     final fieldBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(22),
       borderSide: BorderSide(
         color: settings.highContrast
             ? colors.onSurface
-            : colors.outlineVariant.withValues(alpha: 0.25),
+            : colors.outlineVariant.withValues(alpha: isDark ? 0.16 : 0.35),
         width: settings.highContrast ? 2.0 : 1.0,
       ),
     );
@@ -127,31 +143,33 @@ class VerboVivoApp extends StatelessWidget {
           fontSize: 20,
           fontWeight: FontWeight.w800,
           color: colors.onSurface,
-          letterSpacing: -0.4,
+          letterSpacing: -0.3,
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: settings.highContrast ? 2 : 0,
-        color:
-            settings.highContrast ? colors.surface : colors.surfaceContainerLow,
+        elevation: settings.highContrast ? 2 : (isDark ? 0 : 0.5),
+        shadowColor: Colors.black.withValues(alpha: isDark ? 0 : 0.06),
+        color: settings.highContrast
+            ? colors.surface
+            : (isDark ? colors.surfaceContainerLow : Colors.white),
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           side: settings.highContrast
               ? BorderSide(color: colors.outline, width: 1.5)
               : BorderSide(
                   color: colors.outlineVariant
-                      .withValues(alpha: isDark ? 0.12 : 0.35),
+                      .withValues(alpha: isDark ? 0.14 : 0.28),
                   width: 1,
                 ),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: colors.surface,
+        backgroundColor: isDark ? const Color(0xFF12161D) : Colors.white,
         elevation: 0,
         height: 68,
-        indicatorColor: colors.primaryContainer,
+        indicatorColor: colors.primaryContainer.withValues(alpha: 0.9),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return TextStyle(
@@ -171,7 +189,7 @@ class VerboVivoApp extends StatelessWidget {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle:
@@ -183,15 +201,38 @@ class VerboVivoApp extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.4)),
+          side: BorderSide(
+            color: colors.outlineVariant.withValues(alpha: isDark ? 0.25 : 0.45),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
+      chipTheme: ChipThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: isDark ? 0.2 : 0.35),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        backgroundColor: colors.surface,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: colors.outlineVariant.withValues(alpha: isDark ? 0.14 : 0.24),
+        thickness: 1,
+        space: 1,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: colors.surfaceContainerHighest,
+        fillColor: isDark ? colors.surfaceContainer : colors.surfaceContainerHigh,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         border: fieldBorder,
         enabledBorder: fieldBorder,
         focusedBorder: fieldBorder.copyWith(

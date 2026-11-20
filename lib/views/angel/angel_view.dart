@@ -79,6 +79,7 @@ class _AngelViewState extends State<AngelView> {
     final strings = AppLocalizations.of(widget.settings.language);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final items = widget.controller.getAngelItems();
     final featured = widget.controller.featuredAngelItem;
 
@@ -91,14 +92,25 @@ class _AngelViewState extends State<AngelView> {
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF0F3B32),
-                  Color(0xFF08261F),
-                ],
+                colors: isDark
+                    ? const [
+                        Color(0xFF0F3B32),
+                        Color(0xFF08261F),
+                      ]
+                    : [
+                        colors.primaryContainer.withValues(alpha: 0.38),
+                        colors.surfaceContainerLow,
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFFF4CA83).withValues(alpha: 0.35)
+                    : colors.primary.withValues(alpha: 0.25),
+                width: 1.2,
               ),
             ),
             padding: const EdgeInsets.all(24),
@@ -128,20 +140,24 @@ class _AngelViewState extends State<AngelView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: (isDark ? Colors.white : colors.primary).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.lock_open_rounded, size: 14, color: Colors.white),
+                          Icon(
+                            Icons.lock_open_rounded,
+                            size: 14,
+                            color: isDark ? Colors.white : colors.primary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             strings.angelFreeBadge,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: isDark ? Colors.white : colors.primary,
                             ),
                           ),
                         ],
@@ -154,14 +170,14 @@ class _AngelViewState extends State<AngelView> {
                   strings.angelSectionTitle,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: isDark ? Colors.white : colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   strings.angelNotice,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFFDBEEE6),
+                    color: isDark ? const Color(0xFFDBEEE6) : colors.onSurfaceVariant,
                     height: 1.4,
                   ),
                 ),
@@ -178,6 +194,7 @@ class _AngelViewState extends State<AngelView> {
                           backgroundColor: const Color(0xFFF4CA83),
                           foregroundColor: const Color(0xFF1E301F),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: () => _openAngelItem(featured),
                         icon: const Icon(Icons.play_arrow_rounded, size: 22),
@@ -192,9 +209,15 @@ class _AngelViewState extends State<AngelView> {
                       borderRadius: BorderRadius.circular(14),
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Color(0xFFDBEEE6), width: 1.5),
+                          foregroundColor: isDark ? Colors.white : colors.primary,
+                          side: BorderSide(
+                            color: isDark
+                                ? const Color(0xFFDBEEE6).withValues(alpha: 0.6)
+                                : colors.primary.withValues(alpha: 0.4),
+                            width: 1.2,
+                          ),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         onPressed: _openExternalAngel,
                         icon: const Icon(Icons.open_in_new, size: 18),
@@ -218,7 +241,7 @@ class _AngelViewState extends State<AngelView> {
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear_rounded),
                     onPressed: () {
                       _searchController.clear();
                       _onSearchChanged('');
@@ -228,8 +251,8 @@ class _AngelViewState extends State<AngelView> {
             filled: true,
             fillColor: colors.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3)),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           ),

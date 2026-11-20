@@ -13,6 +13,7 @@ class DevotionalBannerCard extends StatelessWidget {
     final controller = DevotionalController.instance;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return AnimatedBuilder(
       animation: controller,
@@ -34,24 +35,24 @@ class DevotionalBannerCard extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  colors.primaryContainer.withValues(alpha: 0.85),
-                  colors.surfaceContainerHighest.withValues(alpha: 0.95),
+                  colors.surfaceContainerLow,
+                  colors.primaryContainer.withValues(alpha: isDark ? 0.3 : 0.2),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: colors.primary.withValues(alpha: 0.25),
-                width: 1.2,
+                color: colors.primary.withValues(alpha: isDark ? 0.22 : 0.28),
+                width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colors.primary.withValues(alpha: 0.08),
+                  color: colors.primary.withValues(alpha: isDark ? 0.04 : 0.05),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -86,9 +87,12 @@ class DevotionalBannerCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.2),
+                          color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: (isDark ? Colors.amber.shade300 : Colors.amber.shade700)
+                                .withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -99,7 +103,7 @@ class DevotionalBannerCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.amber.shade900,
+                                color: isDark ? Colors.amber.shade300 : Colors.amber.shade900,
                               ),
                             ),
                           ],
@@ -109,20 +113,24 @@ class DevotionalBannerCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.15),
+                          color: Colors.green.withValues(alpha: isDark ? 0.2 : 0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle_rounded, size: 14, color: Colors.green.shade700),
+                            Icon(
+                              Icons.check_circle_rounded,
+                              size: 14,
+                              color: isDark ? Colors.green.shade300 : Colors.green.shade700,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Concluído',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade800,
+                                color: isDark ? Colors.green.shade300 : Colors.green.shade800,
                               ),
                             ),
                           ],
@@ -138,9 +146,10 @@ class DevotionalBannerCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   '“${devotional.scriptureText}”',
                   maxLines: 2,
@@ -161,14 +170,17 @@ class DevotionalBannerCard extends StatelessWidget {
                     color: colors.primary,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
                 // Action buttons
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     FilledButton.icon(
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () => DevotionalDialog.show(
                         context,
@@ -178,10 +190,10 @@ class DevotionalBannerCard extends StatelessWidget {
                       icon: const Icon(Icons.menu_book_rounded, size: 16),
                       label: const Text('Meditar Agora'),
                     ),
-                    const SizedBox(width: 8),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () {
                         VerseStudioSheet.show(

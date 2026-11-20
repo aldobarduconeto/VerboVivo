@@ -230,46 +230,44 @@ class AngelCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: onPlay,
-                      icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                      label: const Text('Assistir no Aplicativo'),
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTvMode ? 14 : 11,
-                        ),
-                        textStyle: TextStyle(
-                          fontSize: isTvMode ? 14 : 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => FamilyGuideDialog.show(
-                        context,
-                        mediaId: item.id,
-                        title: item.title,
-                      ),
-                      icon: const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 14)),
-                      label: const Text('Debate em Família'),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        padding: EdgeInsets.symmetric(
-                          vertical: isTvMode ? 12 : 9,
-                        ),
-                        textStyle: TextStyle(
-                          fontSize: isTvMode ? 13 : 12,
-                          fontWeight: FontWeight.w600,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: onPlay,
+                          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                          label: const Text('Assistir'),
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: isTvMode ? 14 : 11,
+                            ),
+                            textStyle: TextStyle(
+                              fontSize: isTvMode ? 14 : 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      IconButton.outlined(
+                        tooltip: 'Debate em Família',
+                        onPressed: () => FamilyGuideDialog.show(
+                          context,
+                          mediaId: item.id,
+                          title: item.title,
+                        ),
+                        icon: const Icon(Icons.family_restroom_rounded, size: 20),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.all(11),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

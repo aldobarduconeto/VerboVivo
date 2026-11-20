@@ -6,19 +6,27 @@ class ReadingLibraryController extends ChangeNotifier {
 
   static final instance = ReadingLibraryController._();
   static const _lastReadKey = 'reading_last_chapter';
+  static const _historyKey = 'reading_recent_chapters';
   static const _bookmarksKey = 'reading_bookmarks';
+  static const _historyLimit = 30;
 
-  String? _lastRead;
+  List<String> _history = const [];
   List<String> _bookmarks = const [];
   Future<void> _pendingWrite = Future.value();
 
-  String? get lastRead => _lastRead;
+  String? get lastRead => _history.firstOrNull;
+  List<String> get history => _history;
   List<String> get bookmarks => _bookmarks;
 
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _lastRead = prefs.getString(_lastReadKey);
+      final previousChapter = prefs.getString(_lastReadKey);
+      _history = List.unmodifiable(
+        (prefs.getStringList(_historyKey) ??
+                [if (previousChapter != null) previousChapter])
+            .take(_historyLimit),
+      );
       _bookmarks = List.unmodifiable(prefs.getStringList(_bookmarksKey) ?? []);
       notifyListeners();
     } catch (error) {
@@ -27,9 +35,13 @@ class ReadingLibraryController extends ChangeNotifier {
   }
 
   Future<bool> recordReading(String reference) => _write((prefs) async {
-        if (_lastRead == reference) return true;
-        if (!await prefs.setString(_lastReadKey, reference)) return false;
-        _lastRead = reference;
+        if (lastRead == reference) return true;
+        final updated = [
+          reference,
+          ..._history.where((chapter) => chapter != reference),
+        ].take(_historyLimit).toList();
+        if (!await prefs.setStringList(_historyKey, updated)) return false;
+        _history = List.unmodifiable(updated);
         notifyListeners();
         return true;
       });

@@ -23,6 +23,7 @@ class ExploreIntro extends StatelessWidget {
     final s = strings ?? AppLocalizations.pt;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -30,29 +31,56 @@ class ExploreIntro extends StatelessWidget {
         final content = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome_rounded, size: 13, color: colors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    topic == null ? 'BEM-VINDO AO VERBOVIVO' : 'TEMA EM DESTAQUE',
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
               topic ?? s.studyWelcomeTitle,
               style: (wide
-                      ? theme.textTheme.displaySmall
-                      : theme.textTheme.headlineMedium)
+                      ? theme.textTheme.headlineMedium
+                      : theme.textTheme.titleLarge)
                   ?.copyWith(
-                color: colors.onPrimaryContainer,
+                color: colors.onSurface,
                 fontWeight: FontWeight.w800,
-                height: 1.12,
+                letterSpacing: -0.4,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               description ?? s.studyWelcomeDescription,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colors.onPrimaryContainer,
-                height: 1.45,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontSize: 14,
+                height: 1.5,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
             Wrap(
               spacing: 10,
               runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 FilledButton.icon(
                   onPressed: onExplore ?? onDraw,
@@ -60,6 +88,7 @@ class ExploreIntro extends StatelessWidget {
                     onExplore == null
                         ? Icons.shuffle_rounded
                         : Icons.arrow_forward_rounded,
+                    size: 18,
                   ),
                   label: Text(
                     onExplore != null
@@ -72,12 +101,12 @@ class ExploreIntro extends StatelessWidget {
                 if (onExplore != null)
                   OutlinedButton.icon(
                     onPressed: onDraw,
-                    icon: const Icon(Icons.shuffle_rounded),
+                    icon: const Icon(Icons.shuffle_rounded, size: 18),
                     label: Text(s.drawAnotherTopic),
                   ),
                 TextButton.icon(
                   onPressed: onOpenLink,
-                  icon: const Icon(Icons.link_rounded),
+                  icon: const Icon(Icons.link_rounded, size: 18),
                   label: Text(s.playByLink),
                 ),
               ],
@@ -87,11 +116,28 @@ class ExploreIntro extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          padding: EdgeInsets.all(wide ? 36 : 22),
+          padding: EdgeInsets.all(wide ? 32 : 20),
           decoration: BoxDecoration(
-            color: colors.primaryContainer,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                colors.surfaceContainerLow,
+                colors.primaryContainer.withValues(alpha: isDark ? 0.35 : 0.22),
+              ],
+            ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: colors.outlineVariant),
+            border: Border.all(
+              color: colors.outlineVariant.withValues(alpha: isDark ? 0.16 : 0.3),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colors.primary.withValues(alpha: isDark ? 0.05 : 0.04),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: wide
               ? Row(
@@ -100,16 +146,22 @@ class ExploreIntro extends StatelessWidget {
                     const SizedBox(width: 32),
                     ExcludeSemantics(
                       child: Container(
-                        width: 144,
-                        height: 144,
+                        width: 130,
+                        height: 130,
                         decoration: BoxDecoration(
-                          color: colors.surface.withValues(alpha: 0.28),
-                          borderRadius: BorderRadius.circular(36),
+                          color: colors.primary.withValues(alpha: isDark ? 0.12 : 0.08),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: colors.primary.withValues(alpha: 0.15),
+                            width: 1.5,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.auto_stories_outlined,
-                          size: 68,
-                          color: colors.onPrimaryContainer,
+                        child: Center(
+                          child: Icon(
+                            Icons.auto_stories_rounded,
+                            size: 60,
+                            color: colors.primary,
+                          ),
                         ),
                       ),
                     ),

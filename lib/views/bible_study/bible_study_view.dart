@@ -165,6 +165,8 @@ class _BibleStudyViewState extends State<BibleStudyView> {
 
   Widget _angelDiscoveryBanner(
       AppStrings strings, ColorScheme colors, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return TvFocusable(
       onPressed: widget.onNavigateToAngel ?? () {},
       borderRadius: BorderRadius.circular(24),
@@ -173,18 +175,33 @@ class _BibleStudyViewState extends State<BibleStudyView> {
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F3B32),
-              Color(0xFF08261F),
-            ],
+            colors: isDark
+                ? const [
+                    Color(0xFF0F3B32),
+                    Color(0xFF08261F),
+                  ]
+                : [
+                    colors.primaryContainer.withValues(alpha: 0.35),
+                    colors.surfaceContainerLow,
+                  ],
           ),
           border: Border.all(
-            color: const Color(0xFFF4CA83).withValues(alpha: 0.35),
-            width: 1.5,
+            color: isDark
+                ? const Color(0xFFF4CA83).withValues(alpha: 0.35)
+                : colors.primary.withValues(alpha: 0.25),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? Colors.black : colors.primary)
+                  .withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +209,8 @@ class _BibleStudyViewState extends State<BibleStudyView> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF4CA83),
                     borderRadius: BorderRadius.circular(8),
@@ -209,22 +227,28 @@ class _BibleStudyViewState extends State<BibleStudyView> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: (isDark ? Colors.white : colors.primary)
+                        .withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.lock_open_rounded, size: 12, color: Colors.white),
+                      Icon(
+                        Icons.lock_open_rounded,
+                        size: 12,
+                        color: isDark ? Colors.white : colors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         strings.angelFreeBadge,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : colors.primary,
                         ),
                       ),
                     ],
@@ -237,23 +261,34 @@ class _BibleStudyViewState extends State<BibleStudyView> {
               'Cinema & Séries Angel Studios',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDark ? Colors.white : colors.onSurface,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Assista a The Chosen (Os Escolhidos), O Jovem Davi, épicos bíblicos e produções familiares de fé sem cadastro ou login.',
-              style: TextStyle(color: Color(0xFFDBEEE6), fontSize: 13),
+              style: TextStyle(
+                color:
+                    isDark ? const Color(0xFFDBEEE6) : colors.onSurfaceVariant,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFF4CA83),
                 foregroundColor: const Color(0xFF1E301F),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               onPressed: widget.onNavigateToAngel,
               icon: const Icon(Icons.movie_filter_rounded),
-              label: const Text('Explorar Catálogo Grátis da Angel'),
+              label: const Text(
+                'Explorar Catálogo Grátis da Angel',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),

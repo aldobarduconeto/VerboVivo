@@ -69,7 +69,7 @@ class VideoCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Botão de Play moderno com efeito vidro
+                      // Botão de Play moderno com efeito vidro tonal
                       Align(
                         alignment: Alignment.bottomRight,
                         child: Padding(
@@ -77,23 +77,23 @@ class VideoCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0F3830).withValues(alpha: 0.92),
+                              color: colors.surface.withValues(alpha: isDark ? 0.88 : 0.92),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFFF4CA83).withValues(alpha: 0.6),
+                                color: colors.primary.withValues(alpha: 0.4),
                                 width: 1.2,
                               ),
-                              boxShadow: const [
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black38,
+                                  color: Colors.black.withValues(alpha: 0.25),
                                   blurRadius: 8,
-                                  offset: Offset(0, 2),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.play_arrow_rounded,
-                              color: Color(0xFFF4CA83),
+                              color: colors.primary,
                               size: 20,
                             ),
                           ),

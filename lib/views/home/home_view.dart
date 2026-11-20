@@ -76,7 +76,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_settings, _controller]),
+      animation: Listenable.merge([_settings, _controller, _topicController]),
       builder: (context, _) {
         final strings = AppLocalizations.of(_settings.language);
         final theme = Theme.of(context);
@@ -111,34 +111,52 @@ class _HomeViewState extends State<HomeView> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final inlineSearch = constraints.maxWidth >= 720;
-              final search = _buildSearchField(strings);
+              final search = _buildSearchField(strings, isDense: inlineSearch);
 
               return Scaffold(
                 appBar: AppBar(
                   backgroundColor: colors.surface,
+                  elevation: 0,
+                  scrolledUnderElevation: 0.5,
                   toolbarHeight: 66,
-                  titleSpacing: 20,
-                  shape: Border(
-                    bottom: BorderSide(color: colors.outlineVariant),
-                  ),
+                  titleSpacing: 18,
                   title: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: colors.primaryContainer,
+                          gradient: LinearGradient(
+                            colors: [
+                              colors.primary,
+                              colors.primary.withValues(alpha: 0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: colors.primary.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Icons.auto_stories_rounded,
                           size: 20,
-                          color: colors.onPrimaryContainer,
+                          color: colors.onPrimary,
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Flexible(
                         child: Text(
                           strings.appTitle,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            fontSize: 20,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -159,32 +177,43 @@ class _HomeViewState extends State<HomeView> {
                   bottom: inlineSearch
                       ? null
                       : PreferredSize(
-                          preferredSize: const Size.fromHeight(60),
+                          preferredSize: const Size.fromHeight(56),
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                             child: search,
                           ),
                         ),
                   actions: [
-                    IconButton(
+                    IconButton.filledTonal(
                       tooltip: _settings.tvMode
                           ? 'Desativar Modo TV'
-                          : 'Ativar Modo TV',
+                          : 'Modo TV & Gamepad',
                       isSelected: _settings.tvMode,
                       onPressed: () => _settings.setTvMode(!_settings.tvMode),
-                      selectedIcon: const Icon(Icons.tv_rounded),
-                      icon: const Icon(Icons.tv_off_outlined),
+                      selectedIcon: const Icon(Icons.tv_rounded, size: 20),
+                      icon: const Icon(Icons.tv_outlined, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: _settings.tvMode
+                            ? colors.primaryContainer
+                            : colors.surfaceContainerHigh.withValues(alpha: 0.6),
+                      ),
                     ),
-                    IconButton(
+                    const SizedBox(width: 6),
+                    IconButton.filledTonal(
                       tooltip: 'Alternar tema',
                       onPressed: widget.onToggleTheme,
                       icon: Icon(
                         widget.dark
-                            ? Icons.light_mode_outlined
-                            : Icons.dark_mode_outlined,
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        size: 20,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor:
+                            colors.surfaceContainerHigh.withValues(alpha: 0.6),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                   ],
                 ),
                 bottomNavigationBar:
@@ -194,7 +223,11 @@ class _HomeViewState extends State<HomeView> {
                     children: [
                       if (inlineSearch) ...[
                         _buildNavigationRail(strings, colors, constraints),
-                        const VerticalDivider(width: 1, thickness: 1),
+                        VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: colors.outlineVariant.withValues(alpha: 0.15),
+                        ),
                       ],
                       Expanded(
                         key: const ValueKey('main-content'),
@@ -211,7 +244,9 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildSearchField(AppStrings strings) {
+  Widget _buildSearchField(AppStrings strings, {bool isDense = false}) {
+    final colors = Theme.of(context).colorScheme;
+
     return TextField(
       key: _searchFieldKey,
       controller: _topicController,
@@ -219,17 +254,33 @@ class _HomeViewState extends State<HomeView> {
       maxLength: 280,
       textInputAction: TextInputAction.search,
       onSubmitted: (_) => _onSearch(),
+      style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         isDense: true,
         counterText: '',
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            EdgeInsets.symmetric(horizontal: 16, vertical: isDense ? 10 : 12),
         hintText: strings.searchFieldHint,
-        labelText: strings.searchFieldLabel,
-        suffixIcon: IconButton(
-          tooltip: strings.searchButton,
-          onPressed: _onSearch,
-          icon: const Icon(Icons.search_rounded),
+        prefixIcon: Icon(Icons.search_rounded, size: 20, color: colors.primary),
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_topicController.text.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.clear_rounded, size: 18),
+                tooltip: 'Limpar',
+                onPressed: () {
+                  setState(() {
+                    _topicController.clear();
+                  });
+                },
+              ),
+            IconButton(
+              tooltip: strings.searchButton,
+              onPressed: _onSearch,
+              icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+            ),
+          ],
         ),
       ),
     );
@@ -238,24 +289,35 @@ class _HomeViewState extends State<HomeView> {
   Widget? _buildBottomBar(
       AppStrings strings, ColorScheme colors, bool isLargeScreen) {
     final tvHint = _settings.tvMode
-        ? Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: colors.surfaceContainerHighest.withValues(alpha: 0.95),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.gamepad_rounded, size: 16, color: colors.primary),
-                const SizedBox(width: 8),
-                Flexible(
+        ? Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.gamepad_rounded, size: 16, color: colors.primary),
+                  const SizedBox(width: 8),
+                  Flexible(
                     child: Text(
-                  'D-pad: Navegar • A/OK: Selecionar • L1/R1: Abas • B: Voltar • Y: Modo TV',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSurfaceVariant,
+                      'D-pad: Navegar • A/OK: Selecionar • L1/R1: Abas • B: Voltar • Y: Modo TV',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                )),
-              ],
+                ],
+              ),
             ),
           )
         : null;
@@ -272,7 +334,7 @@ class _HomeViewState extends State<HomeView> {
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: colors.outlineVariant.withValues(alpha: 0.18),
+                color: colors.outlineVariant.withValues(alpha: 0.14),
                 width: 1,
               ),
             ),

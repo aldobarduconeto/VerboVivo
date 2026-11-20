@@ -31,6 +31,7 @@ class FamilyGuideDialog extends StatelessWidget {
     final media = MediaQuery.of(context);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       constraints: BoxConstraints(maxHeight: media.size.height * 0.92),
@@ -78,7 +79,7 @@ class FamilyGuideDialog extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.amber.shade800,
+                        color: isDark ? Colors.amber.shade300 : Colors.amber.shade800,
                         letterSpacing: 0.5,
                       ),
                     ),

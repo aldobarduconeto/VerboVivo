@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../controllers/journal_controller.dart';
@@ -47,13 +49,13 @@ class _BibleViewState extends State<BibleView> {
     );
   }
 
-  Future<void> _showBookmarks(AppStrings strings) async {
+  Future<void> _showChapterList(String title, List<String> chapters) async {
     final reference = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
-        title: Text(strings.savedChapters),
+        title: Text(title),
         children: [
-          for (final chapter in _library.bookmarks)
+          for (final chapter in chapters)
             SimpleDialogOption(
               onPressed: () => Navigator.of(context).pop(chapter),
               child: Text(chapter),
@@ -64,7 +66,23 @@ class _BibleViewState extends State<BibleView> {
     if (mounted && reference != null) _openChapter(reference);
   }
 
+  void _openRandomChapter() {
+    final books = BibleService.allBooks;
+    var index = Random().nextInt(
+      books.fold(0, (total, book) => total + book.chapters),
+    );
+    for (final book in books) {
+      if (index < book.chapters) {
+        _openChapter('${book.name} ${index + 1}');
+        return;
+      }
+      index -= book.chapters;
+    }
+  }
+
   Widget _buildReadingLibrary(AppStrings strings) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListenableBuilder(
       listenable: Listenable.merge([_library, JournalController.instance]),
       builder: (context, _) {
@@ -79,24 +97,78 @@ class _BibleViewState extends State<BibleView> {
               children: [
                 if (lastRead != null)
                   ListTile(
-                    leading: const Icon(Icons.history_rounded),
-                    title: Text(strings.continueReading),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.history_rounded, size: 20, color: colors.primary),
+                    ),
+                    title: Text(strings.continueReading, style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(lastRead),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => _openChapter(lastRead),
                   ),
                 if (_library.bookmarks.isNotEmpty)
                   ListTile(
-                    leading: const Icon(Icons.bookmarks_outlined),
-                    title: Text(strings.savedChapters),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => _showBookmarks(strings),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.secondaryContainer.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.bookmarks_outlined, size: 20, color: colors.secondary),
+                    ),
+                    title: Text(strings.savedChapters, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => _showChapterList(
+                      strings.savedChapters,
+                      _library.bookmarks,
+                    ),
+                  ),
+                if (_library.history.isNotEmpty)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceContainerHighest.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.list_alt_rounded, size: 20, color: colors.onSurfaceVariant),
+                    ),
+                    title: Text(strings.readingHistory, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => _showChapterList(
+                      strings.readingHistory,
+                      _library.history,
+                    ),
                   ),
                 ListTile(
-                  leading: const Icon(Icons.volunteer_activism_rounded, color: Colors.amber),
-                  title: const Text('Diário de Fé & Mural de Oração'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colors.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.shuffle_rounded, size: 20, color: colors.primary),
+                  ),
+                  title: Text(strings.randomChapter, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: _openRandomChapter,
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.volunteer_activism_rounded, size: 20, color: Colors.amber),
+                  ),
+                  title: const Text('Diário de Fé & Mural de Oração', style: TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text('$prayers orações ativas • $highlights versículos destacados'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => JournalView.show(context),
                 ),
               ],
@@ -261,6 +333,7 @@ class _BibleViewState extends State<BibleView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final strings = AppLocalizations.of(_settings.language);
 
     final filteredBooks = _getFilteredBooks();
@@ -277,14 +350,25 @@ class _BibleViewState extends State<BibleView> {
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF1B3B36),
-                  Color(0xFF0F2622),
-                ],
+                colors: isDark
+                    ? const [
+                        Color(0xFF142B27),
+                        Color(0xFF0C1D1A),
+                      ]
+                    : [
+                        colors.primaryContainer.withValues(alpha: 0.38),
+                        colors.surfaceContainerLow,
+                      ],
+              ),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFFF4CA83).withValues(alpha: 0.35)
+                    : colors.primary.withValues(alpha: 0.25),
+                width: 1.2,
               ),
             ),
             padding: const EdgeInsets.all(24),
@@ -319,15 +403,15 @@ class _BibleViewState extends State<BibleView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: (isDark ? Colors.white : colors.primary).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         '66 Livros',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : colors.primary,
                         ),
                       ),
                     ),
@@ -338,14 +422,14 @@ class _BibleViewState extends State<BibleView> {
                   'Bíblia Sagrada',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: isDark ? Colors.white : colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Leia, pesquise e medite em qualquer um dos 66 livros bíblicos e seus capítulos completos.',
                   style: TextStyle(
-                    color: Color(0xFFDBEEE6),
+                    color: isDark ? const Color(0xFFDBEEE6) : colors.onSurfaceVariant,
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -359,6 +443,7 @@ class _BibleViewState extends State<BibleView> {
                       backgroundColor: const Color(0xFFF4CA83),
                       foregroundColor: const Color(0xFF1E301F),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     onPressed: () => _openChapter('Salmos 23'),
                     icon: const Icon(Icons.menu_book_rounded, size: 20),
@@ -389,7 +474,7 @@ class _BibleViewState extends State<BibleView> {
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(Icons.clear_rounded),
                     onPressed: () {
                       _searchController.clear();
                       _onSearchChanged('');
@@ -399,8 +484,8 @@ class _BibleViewState extends State<BibleView> {
             filled: true,
             fillColor: colors.surfaceContainer,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.3)),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           ),

@@ -14,6 +14,8 @@ class AppStrings {
     required this.searchButton,
     required this.continueReading,
     required this.savedChapters,
+    required this.readingHistory,
+    required this.randomChapter,
     required this.saveChapterBookmark,
     required this.removeChapterBookmark,
     required this.bookmarkSaveError,
@@ -83,6 +85,8 @@ class AppStrings {
   final String searchButton;
   final String continueReading;
   final String savedChapters;
+  final String readingHistory;
+  final String randomChapter;
   final String saveChapterBookmark;
   final String removeChapterBookmark;
   final String bookmarkSaveError;
@@ -153,6 +157,8 @@ class AppLocalizations {
     searchFieldHint: 'Ex.: ansiedade no trabalho, luto, perdão ou Salmos 23',
     searchButton: 'Buscar tema',
     continueReading: 'Continuar leitura',
+    readingHistory: 'Histórico de leitura',
+    randomChapter: 'Sortear capítulo',
     savedChapters: 'Capítulos salvos',
     saveChapterBookmark: 'Salvar capítulo',
     removeChapterBookmark: 'Remover marcador',
@@ -223,6 +229,8 @@ class AppLocalizations {
     searchFieldHint: 'E.g.: anxiety at work, grief, forgiveness or Psalm 23',
     searchButton: 'Search topic',
     continueReading: 'Continue reading',
+    readingHistory: 'Reading history',
+    randomChapter: 'Random chapter',
     savedChapters: 'Saved chapters',
     saveChapterBookmark: 'Save chapter',
     removeChapterBookmark: 'Remove bookmark',
@@ -293,6 +301,8 @@ class AppLocalizations {
     searchFieldHint: 'Ej.: ansiedad en el trabajo, duelo, perdón o Salmos 23',
     searchButton: 'Buscar tema',
     continueReading: 'Continuar lectura',
+    readingHistory: 'Historial de lectura',
+    randomChapter: 'Capítulo al azar',
     savedChapters: 'Capítulos guardados',
     saveChapterBookmark: 'Guardar capítulo',
     removeChapterBookmark: 'Quitar marcador',

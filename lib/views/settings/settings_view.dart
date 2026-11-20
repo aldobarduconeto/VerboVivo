@@ -495,18 +495,25 @@ class _SettingsViewState extends State<SettingsView> {
     required ColorScheme colors,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      padding: const EdgeInsets.only(left: 4, bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: colors.primary),
-          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: colors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: colors.primary),
+          ),
+          const SizedBox(width: 10),
           Text(
             title,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: colors.primary,
-              letterSpacing: 0.5,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: colors.onSurface,
+              letterSpacing: 0.2,
             ),
           ),
         ],
