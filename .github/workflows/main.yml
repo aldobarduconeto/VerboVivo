@@ -40,6 +40,27 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Configure Gradle Repositories & Mirrors
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat << 'EOF' > ~/.gradle/init.d/repositories.init.gradle
+          gradle.beforeSettings { settings ->
+              settings.pluginManagement {
+                  repositories {
+                      google()
+                      mavenCentral()
+                      gradlePluginPortal()
+                  }
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+
       # Build APK
       - name: Build Android APK
         run: |
