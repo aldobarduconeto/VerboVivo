@@ -8,6 +8,7 @@ O **VerboVivo** é um aplicativo de última geração construído em **Flutter**
 
 ## 📑 Sumário
 
+- [Capturas de tela](#capturas-de-tela)
 - [Visão Geral e Diferenciais](#-visão-geral-e-diferenciais)
 - [Design System & Interface Clean](#-design-system--interface-clean)
 - [Arquitetura do Projeto (MVC)](#-arquitetura-do-projeto-mvc)
@@ -28,6 +29,20 @@ O **VerboVivo** é um aplicativo de última geração construído em **Flutter**
 - [Suíte de Testes e Qualidade](#-suíte-de-testes-e-qualidade)
 - [Fontes de Dados e Créditos](#-fontes-de-dados-e-créditos)
 - [Licença](#-licença)
+
+---
+
+## Capturas de tela
+
+Exemplos da interface do VerboVivo em português, no layout móvel e no tema escuro.
+
+| Estudo bíblico | Devocional diário | Estúdio de cards |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/01-estudo-biblico.png" alt="Tela inicial de estudo bíblico" width="240"> | <img src="docs/screenshots/02-devocional.png" alt="Devocional com versículo e reflexão do dia" width="240"> | <img src="docs/screenshots/03-estudio-de-cards.png" alt="Prévia e opções de personalização de um card de versículo" width="240"> |
+
+| Bíblia Sagrada | Seletor de capítulos | Configurações |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/04-biblia.png" alt="Tela da Bíblia Sagrada com busca de passagens e atalhos" width="240"> | <img src="docs/screenshots/05-seletor-de-capitulos.png" alt="Seletor de capítulos de Gênesis" width="240"> | <img src="docs/screenshots/06-configuracoes.png" alt="Configurações de tema, aparência e acessibilidade" width="240"> |
 
 ---
 
