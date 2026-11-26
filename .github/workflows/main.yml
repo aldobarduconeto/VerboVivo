@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -130,10 +129,14 @@ jobs:
       - name: Create Inno Setup Script & Compile Installer
         shell: pwsh
         run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          if ($env:GITHUB_REF_TYPE -ne 'tag' -or $version -notmatch '^\d+\.\d+\.\d+([+-][0-9A-Za-z.-]+)?$') {
+            throw "Release exige uma tag de versão como v1.2.3; recebida: $env:GITHUB_REF_NAME"
+          }
           $issContent = @"
           [Setup]
           AppName=VerboVivo
-          AppVersion=1.0.0
+          AppVersion=$version
           DefaultDirName={autopf}\VerboVivo
           DefaultGroupName=VerboVivo
           OutputDir=.

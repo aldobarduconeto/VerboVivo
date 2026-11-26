@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings_model.dart';
+import '../services/app_update_service.dart';
 
 export '../models/settings_model.dart';
 
@@ -50,6 +51,11 @@ class SettingsController extends ChangeNotifier {
   bool _highContrast = false;
   bool _dailyReflectionReminder = false;
   bool _tvMode = false;
+  bool _autoCheckUpdates = true;
+  UpdateCheckResult? _latestUpdate;
+  bool _hasUpdateBadge = false;
+  bool _isCheckingUpdate = false;
+  DateTime? _lastUpdateCheck;
   bool _isLoaded = false;
 
   // Getters
@@ -63,6 +69,11 @@ class SettingsController extends ChangeNotifier {
   bool get highContrast => _highContrast;
   bool get dailyReflectionReminder => _dailyReflectionReminder;
   bool get tvMode => _tvMode;
+  bool get autoCheckUpdates => _autoCheckUpdates;
+  UpdateCheckResult? get latestUpdate => _latestUpdate;
+  bool get hasUpdateBadge => _hasUpdateBadge;
+  bool get isCheckingUpdate => _isCheckingUpdate;
+  DateTime? get lastUpdateCheck => _lastUpdateCheck;
   bool get isLoaded => _isLoaded;
 
   Future<void> loadSettings() async {
@@ -87,6 +98,12 @@ class SettingsController extends ChangeNotifier {
       _highContrast = prefs.getBool('high_contrast') ?? false;
       _dailyReflectionReminder = prefs.getBool('daily_reminder') ?? false;
       _tvMode = prefs.getBool('tv_mode') ?? false;
+      _autoCheckUpdates = prefs.getBool('auto_check_updates') ?? true;
+
+      final lastCheckEpoch = prefs.getInt('last_update_check_epoch');
+      if (lastCheckEpoch != null) {
+        _lastUpdateCheck = DateTime.fromMillisecondsSinceEpoch(lastCheckEpoch);
+      }
 
       _isLoaded = true;
       notifyListeners();
@@ -94,6 +111,75 @@ class SettingsController extends ChangeNotifier {
       _isLoaded = true;
       notifyListeners();
     }
+  }
+
+  /// Verifica silenciosamente se há atualizações na inicialização caso a opção esteja ativa.
+  Future<void> checkUpdateOnStartup() async {
+    if (!_autoCheckUpdates) return;
+
+    // Throttle de 6 horas para verificação automática de inicialização
+    if (_lastUpdateCheck != null &&
+        DateTime.now().difference(_lastUpdateCheck!).inHours < 6) {
+      return;
+    }
+
+    try {
+      final result = await AppUpdateService.checkForUpdateSilent();
+      if (result != null) {
+        _latestUpdate = result;
+        _lastUpdateCheck = DateTime.now();
+        if (result.updateAvailable) {
+          _hasUpdateBadge = true;
+        }
+        notifyListeners();
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt(
+          'last_update_check_epoch',
+          _lastUpdateCheck!.millisecondsSinceEpoch,
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<UpdateCheckResult> checkForUpdatesManually() async {
+    _isCheckingUpdate = true;
+    notifyListeners();
+    try {
+      final result = await AppUpdateService.checkForUpdate(forceRefresh: true);
+      _latestUpdate = result;
+      _lastUpdateCheck = DateTime.now();
+      _hasUpdateBadge = result.updateAvailable;
+      notifyListeners();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+        'last_update_check_epoch',
+        _lastUpdateCheck!.millisecondsSinceEpoch,
+      );
+
+      return result;
+    } finally {
+      _isCheckingUpdate = false;
+      notifyListeners();
+    }
+  }
+
+  void dismissUpdateBadge() {
+    if (_hasUpdateBadge) {
+      _hasUpdateBadge = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> setAutoCheckUpdates(bool enabled) async {
+    if (_autoCheckUpdates == enabled) return;
+    _autoCheckUpdates = enabled;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auto_check_updates', enabled);
+    } catch (_) {}
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -188,6 +274,10 @@ class SettingsController extends ChangeNotifier {
     _highContrast = false;
     _dailyReflectionReminder = false;
     _tvMode = false;
+    _autoCheckUpdates = true;
+    _latestUpdate = null;
+    _hasUpdateBadge = false;
+    _lastUpdateCheck = null;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();

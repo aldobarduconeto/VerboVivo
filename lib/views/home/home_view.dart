@@ -359,8 +359,16 @@ class _HomeViewState extends State<HomeView> {
                 label: strings.tabAngel,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.settings_outlined),
-                selectedIcon: const Icon(Icons.settings_rounded),
+                icon: Badge(
+                  isLabelVisible: _settings.hasUpdateBadge,
+                  smallSize: 8,
+                  child: const Icon(Icons.settings_outlined),
+                ),
+                selectedIcon: Badge(
+                  isLabelVisible: _settings.hasUpdateBadge,
+                  smallSize: 8,
+                  child: const Icon(Icons.settings_rounded),
+                ),
                 label: strings.settingsTitle,
               ),
             ],
@@ -408,8 +416,16 @@ class _HomeViewState extends State<HomeView> {
             label: Text(strings.tabAngel),
           ),
           NavigationRailDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings_rounded),
+            icon: Badge(
+              isLabelVisible: _settings.hasUpdateBadge,
+              smallSize: 8,
+              child: const Icon(Icons.settings_outlined),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: _settings.hasUpdateBadge,
+              smallSize: 8,
+              child: const Icon(Icons.settings_rounded),
+            ),
             label: Text(strings.settingsTitle),
           ),
         ],

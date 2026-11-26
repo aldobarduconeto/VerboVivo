@@ -10,6 +10,9 @@ export '../models/media_model.dart';
 class YouTubeStreamService {
   const YouTubeStreamService();
 
+  static http.Client? _defaultClient;
+  static http.Client get _sharedClient => _defaultClient ??= http.Client();
+
   static const _invidiousHosts = [
     'inv.nadeko.net',
     'invidious.nerdvpn.de',
@@ -25,9 +28,12 @@ class YouTubeStreamService {
     'piped-api.garudalinux.org',
   ];
 
+  static const int _maxCacheSize = 50;
+
   // Cache em memória para início de reprodução em 0ms
   static final Map<String, ({ResolvedVideo video, DateTime expiresAt})> _cache =
       {};
+  static final Map<String, Future<ResolvedVideo>> _inFlightResolutions = {};
 
   static ResolvedVideo? getCached(String videoId) {
     final entry = _cache[videoId];
@@ -39,6 +45,9 @@ class YouTubeStreamService {
   }
 
   static void setCached(String videoId, ResolvedVideo resolved) {
+    if (_cache.length >= _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
     _cache[videoId] = (
       video: resolved,
       expiresAt: DateTime.now().add(const Duration(hours: 3)),
@@ -47,6 +56,7 @@ class YouTubeStreamService {
 
   static void clearCache() {
     _cache.clear();
+    _inFlightResolutions.clear();
   }
 
   /// Pré-aquece a resolução de streams em segundo plano
@@ -57,15 +67,27 @@ class YouTubeStreamService {
     } catch (_) {}
   }
 
-  Future<ResolvedVideo> resolve(String videoId) async {
+  Future<ResolvedVideo> resolve(String videoId) {
     if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
       throw const FormatException('Identificador de vídeo inválido.');
     }
 
     // 0. Se já estiver no cache, retorna imediatamente (0 ms)
     final cached = getCached(videoId);
-    if (cached != null) return cached;
+    if (cached != null) return Future.value(cached);
 
+    // Se já estiver sendo resolvido, compartilha a mesma Future
+    final inFlight = _inFlightResolutions[videoId];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final resolutionFuture = _executeResolve(videoId);
+    _inFlightResolutions[videoId] = resolutionFuture;
+    return resolutionFuture.whenComplete(() => _inFlightResolutions.remove(videoId));
+  }
+
+  Future<ResolvedVideo> _executeResolve(String videoId) async {
     // 1. Corrida concorrente e paralela entre o extrator direto e os melhores espelhos
     try {
       final futures = <Future<ResolvedVideo?>>[
@@ -124,17 +146,13 @@ class YouTubeStreamService {
   }
 
   Future<ResolvedVideo?> _fastInvidiousRace(String videoId) async {
-    final client = http.Client();
-    try {
-      // Dispara requisições simultâneas aos hosts mais rápidos
-      final topHosts = _invidiousHosts.take(3);
-      final futures = topHosts
-          .map((host) => _fetchInvidiousHost(client, host, videoId))
-          .toList();
-      return await _firstSuccessful(futures);
-    } finally {
-      client.close();
-    }
+    final client = _sharedClient;
+    // Dispara requisições simultâneas aos hosts mais rápidos
+    final topHosts = _invidiousHosts.take(3);
+    final futures = topHosts
+        .map((host) => _fetchInvidiousHost(client, host, videoId))
+        .toList();
+    return await _firstSuccessful(futures);
   }
 
   Future<ResolvedVideo?> _fetchInvidiousHost(
@@ -179,16 +197,12 @@ class YouTubeStreamService {
   }
 
   Future<ResolvedVideo?> _fastPipedRace(String videoId) async {
-    final client = http.Client();
-    try {
-      final topHosts = _pipedHosts.take(2);
-      final futures = topHosts
-          .map((host) => _fetchPipedHost(client, host, videoId))
-          .toList();
-      return await _firstSuccessful(futures);
-    } finally {
-      client.close();
-    }
+    final client = _sharedClient;
+    final topHosts = _pipedHosts.take(2);
+    final futures = topHosts
+        .map((host) => _fetchPipedHost(client, host, videoId))
+        .toList();
+    return await _firstSuccessful(futures);
   }
 
   Future<ResolvedVideo?> _fetchPipedHost(

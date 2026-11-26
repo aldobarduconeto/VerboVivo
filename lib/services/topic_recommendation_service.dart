@@ -21,6 +21,15 @@ class _ThemeDefinition {
 class TopicRecommendationService {
   const TopicRecommendationService();
 
+  static const int _maxCacheSize = 100;
+  static final Map<String, BibleTopic> _topicCache = {};
+  static final Map<String, List<String>> _referencesCache = {};
+
+  static void clearCache() {
+    _topicCache.clear();
+    _referencesCache.clear();
+  }
+
   static const List<_ThemeDefinition> _themes = [
     // 1. Perdão a si mesmo e superação da culpa
     _ThemeDefinition(
@@ -618,6 +627,20 @@ class TopicRecommendationService {
   }
 
   List<String> referencesFor(String title, {List<String> suggested = const []}) {
+    final clean = title.trim();
+    final cacheKey = '${clean.toLowerCase()}:${suggested.join(",")}';
+    final cached = _referencesCache[cacheKey];
+    if (cached != null) return cached;
+
+    final result = _computeReferences(clean, suggested);
+    if (_referencesCache.length >= _maxCacheSize) {
+      _referencesCache.remove(_referencesCache.keys.first);
+    }
+    _referencesCache[cacheKey] = result;
+    return result;
+  }
+
+  List<String> _computeReferences(String title, List<String> suggested) {
     final result = <String>[];
 
     // 1. Verifica se a própria busca é ou contém uma referência bíblica direta
@@ -729,6 +752,19 @@ class TopicRecommendationService {
 
   BibleTopic topicFor(String text) {
     final cleanInput = text.trim();
+    final cacheKey = cleanInput.toLowerCase();
+    final cached = _topicCache[cacheKey];
+    if (cached != null) return cached;
+
+    final result = _computeTopicFor(cleanInput);
+    if (_topicCache.length >= _maxCacheSize) {
+      _topicCache.remove(_topicCache.keys.first);
+    }
+    _topicCache[cacheKey] = result;
+    return result;
+  }
+
+  BibleTopic _computeTopicFor(String cleanInput) {
     final normalized = _normalize(cleanInput);
 
     // 1. Se for uma referência bíblica direta (ex: "Salmos 23", "João 3:16", "Romanos 8")

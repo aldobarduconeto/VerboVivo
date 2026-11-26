@@ -27,6 +27,9 @@ void main() async {
     JournalController.instance.load(),
   ]);
   runApp(const VerboVivoApp());
+
+  // Verificação não bloqueante de atualizações em segundo plano
+  SettingsController.instance.checkUpdateOnStartup();
 }
 
 class VerboVivoApp extends StatelessWidget {

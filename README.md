@@ -268,11 +268,20 @@ Arquivos: [`lib/views/family/family_guide_dialog.dart`](lib/views/family/family_
 | **just_audio_media_kit** | `^2.1.0` | Suporte a áudio avançado em desktop |
 | **shared_preferences** | `^2.5.3` | Persistência assíncrona local de configurações |
 | **http** | `^1.3.0` | Cliente HTTP para consumo de APIs REST |
-| **url_launcher** | `^6.3.1` | Abertura de links externos de contingência |
+| **package_info_plus** | `^8.3.1` | Leitura da versão instalada em cada plataforma |
+| **url_launcher** | `^6.3.1` | Abertura do download da atualização |
 
 ---
 
 ## 🚀 Como Executar e Compilar
+
+### Atualizações sem servidor próprio
+
+Na tela **Configurações → Sobre → Ver atualizações**, o app lê sua versão instalada e consulta a API pública do GitHub para encontrar a última release estável. Quando disponível, abre diretamente o instalador para a plataforma atual: APK (Android), EXE (Windows), DMG (macOS) ou DEB (Linux). Não é necessário manter servidor próprio: a API e os arquivos ficam hospedados na aba **Releases** do GitHub.
+
+O Flutter não pode instalar um aplicativo silenciosamente em todas as plataformas. Android e desktop baixam o pacote e deixam a instalação final para o usuário/sistema. iOS deve ser atualizado pela App Store; uma IPA sem assinatura não é um canal de instalação confiável. Web deve ser publicada novamente no mesmo host e atualizada ao recarregar a página. O verificador informa quando uma release não tem o arquivo esperado.
+
+Para publicar: atualize `version` em `pubspec.yaml`, faça commit e envie uma tag `v` com a mesma versão (por exemplo, `v1.2.3`). O workflow em `.github/workflows/main.yml` compila os artefatos e cria a release com os nomes consumidos pelo verificador. As releases devem incluir `verbovivo-android.apk`, `VerboVivo-Setup.exe`, `verbovivo-macos.dmg` e `verbovivo-linux.deb`. A versão no `pubspec.yaml` precisa acompanhar cada tag para que o app instalado reconheça a atualização corretamente.
 
 ### Pré-requisitos
 * Flutter SDK (versão estável instalada e configurada no `PATH`).

@@ -416,6 +416,28 @@ class AngelService {
     ),
   ];
 
+  static final Map<String, List<AngelMediaItem>> _categoryMap = _initCategoryMap();
+
+  static Map<String, List<AngelMediaItem>> _initCategoryMap() {
+    final map = <String, List<AngelMediaItem>>{
+      'Todos': _catalog,
+    };
+    for (final item in _catalog) {
+      (map[item.category] ??= []).add(item);
+    }
+    return map;
+  }
+
+  static final List<({AngelMediaItem item, String searchHaystack})> _searchIndex =
+      _catalog
+          .map((item) => (
+                item: item,
+                searchHaystack:
+                    '${item.title} ${item.seriesTitle} ${item.category} ${item.description}'
+                        .toLowerCase(),
+              ))
+          .toList(growable: false);
+
   List<AngelMediaItem> getCatalog() => List.unmodifiable(_catalog);
 
   AngelMediaItem get featured => _catalog.first;
@@ -429,18 +451,19 @@ class AngelService {
     if (category == 'Todos' || category.isEmpty) {
       return _catalog;
     }
-    return _catalog.where((item) => item.category == category).toList();
+    return _categoryMap[category] ?? const [];
   }
 
   List<AngelMediaItem> search(String query) {
     final clean = query.trim().toLowerCase();
     if (clean.isEmpty) return _catalog;
 
-    return _catalog.where((item) {
-      return item.title.toLowerCase().contains(clean) ||
-          item.seriesTitle.toLowerCase().contains(clean) ||
-          item.category.toLowerCase().contains(clean) ||
-          item.description.toLowerCase().contains(clean);
-    }).toList();
+    final results = <AngelMediaItem>[];
+    for (final entry in _searchIndex) {
+      if (entry.searchHaystack.contains(clean)) {
+        results.add(entry.item);
+      }
+    }
+    return results;
   }
 }

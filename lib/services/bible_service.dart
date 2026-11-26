@@ -8,10 +8,25 @@ class BibleService {
   BibleService({this.client});
   final http.Client? client;
 
+  static const int _maxCacheSize = 120;
   static final Map<String, BibleChapter> _memoryCache = {};
+  static final Map<String, Future<BibleChapter>> _inFlightRequests = {};
+  static http.Client? _defaultClient;
+
+  static http.Client get _sharedClient => _defaultClient ??= http.Client();
 
   static int get cachedChapterCount => _memoryCache.length;
-  static void clearCache() => _memoryCache.clear();
+  static void clearCache() {
+    _memoryCache.clear();
+    _inFlightRequests.clear();
+  }
+
+  static void _putCache(String key, BibleChapter chapter) {
+    if (_memoryCache.length >= _maxCacheSize) {
+      _memoryCache.remove(_memoryCache.keys.first);
+    }
+    _memoryCache[key] = chapter;
+  }
 
   static const Map<String, String> translationTitles = {
     'ACF11': 'Almeida Corrigida Fiel (ACF)',
@@ -91,6 +106,19 @@ class BibleService {
     BibleBookInfo(id: 66, name: 'Apocalipse', chapters: 22, englishSlug: 'revelation', aliases: ['ap', 'apoc', 'rev']),
   ];
 
+  static final Map<String, BibleBookInfo> _bookLookupMap = _initBookLookup();
+
+  static Map<String, BibleBookInfo> _initBookLookup() {
+    final map = <String, BibleBookInfo>{};
+    for (final book in allBooks) {
+      map[_cleanText(book.name)] = book;
+      for (final alias in book.aliases) {
+        map[_cleanText(alias)] = book;
+      }
+    }
+    return map;
+  }
+
   static String _cleanText(String input) {
     const accents = 'áàâãäéèêëíìîïóòôõöúùûüç';
     const plain = 'aaaaaeeeeiiiiooooouuuuc';
@@ -108,14 +136,7 @@ class BibleService {
   static BibleBookInfo? findBook(String query) {
     final cleaned = _cleanText(query);
     if (cleaned.isEmpty) return null;
-
-    for (final book in allBooks) {
-      if (_cleanText(book.name) == cleaned) return book;
-      for (final alias in book.aliases) {
-        if (_cleanText(alias) == cleaned) return book;
-      }
-    }
-    return null;
+    return _bookLookupMap[cleaned];
   }
 
   static ({BibleBookInfo book, int chapter, int? verse})? parseReference(String input) {
@@ -174,20 +195,30 @@ class BibleService {
     return null;
   }
 
+  static final RegExp _htmlTagRegex = RegExp(r'<[^>]*>');
+  static final RegExp _multiSpaceRegex = RegExp(r'\s+');
+
   static String _stripHtml(String text) {
     return text
-        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll(_htmlTagRegex, '')
         .replaceAll('&nbsp;', ' ')
         .replaceAll('&amp;', '&')
         .replaceAll('&quot;', '"')
         .replaceAll('&#39;', "'")
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
-        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(_multiSpaceRegex, ' ')
         .trim();
   }
 
-  Future<BibleChapter> chapter(String reference, {String? preferredTranslation}) async {
+  /// Pré-carrega o capítulo em segundo plano de forma silenciosa.
+  Future<void> prefetchChapter(String reference, {String? preferredTranslation}) async {
+    try {
+      await chapter(reference, preferredTranslation: preferredTranslation);
+    } catch (_) {}
+  }
+
+  Future<BibleChapter> chapter(String reference, {String? preferredTranslation}) {
     final parsed = parseReference(reference);
     if (parsed == null) {
       throw const FormatException('Referência bíblica inválida ou não reconhecida.');
@@ -196,10 +227,28 @@ class BibleService {
     final trans = preferredTranslation ?? 'ACF11';
     final cacheKey = '${parsed.book.id}:${parsed.chapter}:$trans';
     if (_memoryCache.containsKey(cacheKey)) {
-      return _memoryCache[cacheKey]!;
+      return Future.value(_memoryCache[cacheKey]!);
     }
 
-    final httpClient = client ?? http.Client();
+    // Se já houver uma busca idêntica em andamento, compartilha o mesmo Future (deduplicação)
+    final inFlight = _inFlightRequests[cacheKey];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final requestFuture = _loadChapter(parsed, trans, cacheKey);
+    _inFlightRequests[cacheKey] = requestFuture;
+    return requestFuture.whenComplete(() => _inFlightRequests.remove(cacheKey));
+  }
+
+  Future<BibleChapter> _loadChapter(
+    ({BibleBookInfo book, int chapter, int? verse}) parsed,
+    String trans,
+    String cacheKey,
+  ) async {
+    final httpClient = client ?? _sharedClient;
+    final ownsClient = client != null;
+
     try {
       // 1. Tenta a tradução preferida do usuário
       final preferredTitle = translationTitles[trans] ?? trans;
@@ -207,7 +256,7 @@ class BibleService {
         try {
           final webResult = await _fetchBibleApiWeb(httpClient, parsed.book, parsed.chapter);
           if (webResult != null && webResult.verses.isNotEmpty) {
-            _memoryCache[cacheKey] = webResult;
+            _putCache(cacheKey, webResult);
             return webResult;
           }
         } catch (_) {}
@@ -215,7 +264,7 @@ class BibleService {
         try {
           final prefResult = await _fetchBolls(httpClient, trans, parsed.book, parsed.chapter, preferredTitle);
           if (prefResult != null && prefResult.verses.isNotEmpty) {
-            _memoryCache[cacheKey] = prefResult;
+            _putCache(cacheKey, prefResult);
             return prefResult;
           }
         } catch (_) {}
@@ -228,7 +277,7 @@ class BibleService {
           final title = translationTitles[fallbackSlug] ?? fallbackSlug;
           final res = await _fetchBolls(httpClient, fallbackSlug, parsed.book, parsed.chapter, title);
           if (res != null && res.verses.isNotEmpty) {
-            _memoryCache[cacheKey] = res;
+            _putCache(cacheKey, res);
             return res;
           }
         } catch (_) {}
@@ -238,14 +287,14 @@ class BibleService {
       try {
         final webResult = await _fetchBibleApiWeb(httpClient, parsed.book, parsed.chapter);
         if (webResult != null && webResult.verses.isNotEmpty) {
-          _memoryCache[cacheKey] = webResult;
+          _putCache(cacheKey, webResult);
           return webResult;
         }
       } catch (_) {}
 
       throw Exception('Não foi possível carregar o capítulo no momento. Verifique sua conexão à internet e tente novamente.');
     } finally {
-      if (client == null) httpClient.close();
+      if (ownsClient) httpClient.close();
     }
   }
 

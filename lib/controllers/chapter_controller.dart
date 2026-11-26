@@ -29,11 +29,24 @@ class ChapterController extends ChangeNotifier {
   String? get nextChapter => BibleService.nextChapter(_currentReference);
 
   void load() {
-    _chapterFuture = _bibleService.chapter(
+    final future = _bibleService.chapter(
       _currentReference,
       preferredTranslation: _currentTranslation,
     );
+    _chapterFuture = future;
     notifyListeners();
+
+    // Pré-carrega de forma antecipada e assíncrona o próximo e o capítulo anterior
+    future.then((_) {
+      final next = nextChapter;
+      if (next != null) {
+        _bibleService.prefetchChapter(next, preferredTranslation: _currentTranslation);
+      }
+      final prev = previousChapter;
+      if (prev != null) {
+        _bibleService.prefetchChapter(prev, preferredTranslation: _currentTranslation);
+      }
+    }).catchError((_) {});
   }
 
   void goTo(String reference) {

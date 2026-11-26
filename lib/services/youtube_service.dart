@@ -8,6 +8,10 @@ export '../models/media_model.dart';
 class YouTubeService {
   const YouTubeService({this.client});
   final http.Client? client;
+
+  static http.Client? _defaultClient;
+  static http.Client get _sharedClient => _defaultClient ??= http.Client();
+
   // Public HTTPS instances listed by the Invidious project.
   static const _invidious = [
     'https://yt.chocolatemoo53.com',
@@ -20,13 +24,29 @@ class YouTubeService {
   ];
   static final _videoId = RegExp(r'^[A-Za-z0-9_-]{11}$');
 
+  static const int _maxCacheSize = 80;
+
   // Cache em memória com TTL para pesquisas recentes de vídeos/músicas
   static final Map<String, ({List<VideoItem> items, DateTime expiresAt})>
       _searchCache = {};
+  static final Map<String, Future<List<VideoItem>>> _inFlightSearches = {};
 
-  static void clearCache() => _searchCache.clear();
+  static void clearCache() {
+    _searchCache.clear();
+    _inFlightSearches.clear();
+  }
 
-  Future<List<VideoItem>> search(String query) async {
+  static void _saveToCache(String key, List<VideoItem> items) {
+    if (_searchCache.length >= _maxCacheSize) {
+      _searchCache.remove(_searchCache.keys.first);
+    }
+    _searchCache[key] = (
+      items: items,
+      expiresAt: DateTime.now().add(const Duration(minutes: 25)),
+    );
+  }
+
+  Future<List<VideoItem>> search(String query) {
     final q = query.trim();
     if (q.isEmpty || q.length > 220) {
       throw const SearchUnavailable('Consulta de pesquisa inválida.');
@@ -35,40 +55,89 @@ class YouTubeService {
     final cacheKey = q.toLowerCase();
     final cached = _searchCache[cacheKey];
     if (cached != null && DateTime.now().isBefore(cached.expiresAt)) {
-      return cached.items;
+      return Future.value(cached.items);
     }
 
-    final searchClient = client ?? http.Client();
+    // Se já existe uma pesquisa idêntica em curso, compartilha o Future
+    final inFlight = _inFlightSearches[cacheKey];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final requestFuture = _executeSearch(q, cacheKey);
+    _inFlightSearches[cacheKey] = requestFuture;
+    return requestFuture.whenComplete(() => _inFlightSearches.remove(cacheKey));
+  }
+
+  Future<List<VideoItem>> _executeSearch(String query, String cacheKey) async {
+    final searchClient = client ?? _sharedClient;
+    final ownsClient = client != null;
+
     try {
-      final preferred = await _trySearch(
-          searchClient, _invidious.first, q, const Duration(seconds: 3));
-      if (preferred.isNotEmpty) {
-        _searchCache[cacheKey] = (
-          items: preferred,
-          expiresAt: DateTime.now().add(const Duration(minutes: 20)),
-        );
-        return preferred;
+      // Dispara corrida concorrente entre os 3 espelhos mais rápidos
+      final topInstances = _invidious.take(3);
+      final futures = topInstances
+          .map((host) => _trySearch(searchClient, host, query, const Duration(milliseconds: 2600)))
+          .toList();
+
+      final winner = await _firstNonEmpty(futures);
+      if (winner != null && winner.isNotEmpty) {
+        _saveToCache(cacheKey, winner);
+        return winner;
       }
-      final items = await _searchAlternatives(searchClient, q);
+
+      // Se os 3 primeiros falharem, consulta as alternativas restantes em paralelo
+      final items = await _searchAlternatives(searchClient, query);
       if (items.isNotEmpty) {
-        _searchCache[cacheKey] = (
-          items: items,
-          expiresAt: DateTime.now().add(const Duration(minutes: 20)),
-        );
+        _saveToCache(cacheKey, items);
       }
       return items;
     } finally {
-      if (client == null) searchClient.close();
+      if (ownsClient) searchClient.close();
     }
+  }
+
+  static Future<List<VideoItem>?> _firstNonEmpty(
+      List<Future<List<VideoItem>>> futures) async {
+    if (futures.isEmpty) return null;
+    final completer = Completer<List<VideoItem>?> ();
+    var remaining = futures.length;
+
+    for (final future in futures) {
+      future.then((items) {
+        if (items.isNotEmpty && !completer.isCompleted) {
+          completer.complete(items);
+        } else {
+          remaining--;
+          if (remaining == 0 && !completer.isCompleted) {
+            completer.complete(null);
+          }
+        }
+      }).catchError((_) {
+        remaining--;
+        if (remaining == 0 && !completer.isCompleted) {
+          completer.complete(null);
+        }
+      });
+    }
+
+    return completer.future;
   }
 
   Future<List<VideoItem>> _searchAlternatives(
       http.Client searchClient, String query) {
     final result = Completer<List<VideoItem>>();
-    var remaining = _invidious.length - 1;
-    for (final source in _invidious.skip(1)) {
+    final alternatives = _invidious.skip(3).toList();
+    if (alternatives.isEmpty) {
+      return Future.error(const SearchUnavailable(
+          'A busca de vídeos está indisponível no momento. '
+          'Você pode pesquisar diretamente no YouTube ou tentar novamente.'));
+    }
+
+    var remaining = alternatives.length;
+    for (final source in alternatives) {
       unawaited(
-        _trySearch(searchClient, source, query, const Duration(seconds: 5))
+        _trySearch(searchClient, source, query, const Duration(seconds: 4))
             .then((items) {
           remaining--;
           if (result.isCompleted) return;
@@ -166,13 +235,32 @@ class PodcastService {
   const PodcastService({this.client});
   final http.Client? client;
 
+  static http.Client? _defaultClient;
+  static http.Client get _sharedClient => _defaultClient ??= http.Client();
+
+  static const int _maxCacheSize = 80;
+
   // Cache em memória para resultados de podcasts
   static final Map<String, ({List<PodcastItem> items, DateTime expiresAt})>
       _podcastCache = {};
+  static final Map<String, Future<List<PodcastItem>>> _inFlightSearches = {};
 
-  static void clearCache() => _podcastCache.clear();
+  static void clearCache() {
+    _podcastCache.clear();
+    _inFlightSearches.clear();
+  }
 
-  Future<List<PodcastItem>> search(String topic) async {
+  static void _saveToCache(String key, List<PodcastItem> items) {
+    if (_podcastCache.length >= _maxCacheSize) {
+      _podcastCache.remove(_podcastCache.keys.first);
+    }
+    _podcastCache[key] = (
+      items: items,
+      expiresAt: DateTime.now().add(const Duration(minutes: 25)),
+    );
+  }
+
+  Future<List<PodcastItem>> search(String topic) {
     final clean = topic
         .replaceAll(RegExp(r'\bpodcast\b', caseSensitive: false), '')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -184,10 +272,23 @@ class PodcastService {
     final cacheKey = clean.toLowerCase();
     final cached = _podcastCache[cacheKey];
     if (cached != null && DateTime.now().isBefore(cached.expiresAt)) {
-      return cached.items;
+      return Future.value(cached.items);
     }
 
-    final searchClient = client ?? http.Client();
+    final inFlight = _inFlightSearches[cacheKey];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final requestFuture = _executeSearch(clean, cacheKey);
+    _inFlightSearches[cacheKey] = requestFuture;
+    return requestFuture.whenComplete(() => _inFlightSearches.remove(cacheKey));
+  }
+
+  Future<List<PodcastItem>> _executeSearch(String clean, String cacheKey) async {
+    final searchClient = client ?? _sharedClient;
+    final ownsClient = client != null;
+
     try {
       List<PodcastItem> results = [];
       // 1. Busca prioritária pelo termo específico exato fornecido
@@ -210,14 +311,11 @@ class PodcastService {
       }
 
       if (results.isNotEmpty) {
-        _podcastCache[cacheKey] = (
-          items: results,
-          expiresAt: DateTime.now().add(const Duration(minutes: 20)),
-        );
+        _saveToCache(cacheKey, results);
       }
       return results;
     } finally {
-      if (client == null) searchClient.close();
+      if (ownsClient) searchClient.close();
     }
   }
 
