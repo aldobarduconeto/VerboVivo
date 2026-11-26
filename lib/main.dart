@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'controllers/devotional_controller.dart';
 import 'controllers/journal_controller.dart';
 import 'controllers/reading_library_controller.dart';
+import 'controllers/reading_plan_controller.dart';
 import 'controllers/settings_controller.dart';
 import 'views/home/home_view.dart';
 import 'widgets/desktop_window_frame.dart';
@@ -23,6 +24,7 @@ void main() async {
   await Future.wait([
     SettingsController.instance.loadSettings(),
     ReadingLibraryController.instance.load(),
+    ReadingPlanController.instance.load(),
     DevotionalController.instance.load(),
     JournalController.instance.load(),
   ]);

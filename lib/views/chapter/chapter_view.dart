@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../controllers/ambient_audio_controller.dart';
 import '../../controllers/chapter_controller.dart';
 import '../../controllers/journal_controller.dart';
 import '../../controllers/reading_library_controller.dart';
@@ -9,6 +10,7 @@ import '../../controllers/settings_controller.dart';
 import '../../models/bible_model.dart';
 import '../../services/app_localizations.dart';
 import '../../services/bible_service.dart' show BibleService;
+import '../ambient/ambient_sound_sheet.dart';
 import '../verse_studio/verse_studio_sheet.dart';
 
 class ChapterView extends StatefulWidget {
@@ -355,7 +357,12 @@ class _ChapterViewState extends State<ChapterView> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _library, _journal]),
+      animation: Listenable.merge([
+        _controller,
+        _library,
+        _journal,
+        AmbientAudioController.instance,
+      ]),
       builder: (context, _) {
         final strings = AppLocalizations.of(_settings.language);
         final theme = Theme.of(context);
@@ -366,12 +373,30 @@ class _ChapterViewState extends State<ChapterView> {
           _controller.currentReference,
         );
         final bookmarked = _library.bookmarks.contains(reference);
+        final isAmbientPlaying = AmbientAudioController.instance.isPlaying;
 
         return Scaffold(
           appBar: AppBar(
             title: Text(_controller.currentReference,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             actions: [
+              IconButton(
+                tooltip: 'Áudio Ambiente & Meditação',
+                icon: Icon(
+                  isAmbientPlaying
+                      ? Icons.headphones_rounded
+                      : Icons.headphones_outlined,
+                  color: isAmbientPlaying ? colors.primary : null,
+                ),
+                onPressed: () {
+                  showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const AmbientSoundSheet(),
+                  );
+                },
+              ),
               if (reference != null)
                 IconButton(
                   tooltip: bookmarked

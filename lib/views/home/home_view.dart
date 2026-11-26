@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../controllers/ambient_audio_controller.dart';
 import '../../controllers/home_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../services/app_localizations.dart';
 import '../../widgets/tv_focusable.dart';
 import '../../widgets/tv_remote_scope.dart';
+import '../ambient/ambient_sound_sheet.dart';
 import '../angel/angel_view.dart';
 import '../bible/bible_view.dart';
 import '../bible_study/bible_study_view.dart';
@@ -76,7 +78,12 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_settings, _controller, _topicController]),
+      animation: Listenable.merge([
+        _settings,
+        _controller,
+        _topicController,
+        AmbientAudioController.instance,
+      ]),
       builder: (context, _) {
         final strings = AppLocalizations.of(_settings.language);
         final theme = Theme.of(context);
@@ -184,6 +191,26 @@ class _HomeViewState extends State<HomeView> {
                           ),
                         ),
                   actions: [
+                    IconButton.filledTonal(
+                      tooltip: 'Áudio Ambiente & Meditação',
+                      isSelected: AmbientAudioController.instance.isPlaying,
+                      onPressed: () {
+                        showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => const AmbientSoundSheet(),
+                        );
+                      },
+                      selectedIcon: const Icon(Icons.headphones_rounded, size: 20),
+                      icon: const Icon(Icons.headphones_outlined, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AmbientAudioController.instance.isPlaying
+                            ? colors.primaryContainer
+                            : colors.surfaceContainerHigh.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     IconButton.filledTonal(
                       tooltip: _settings.tvMode
                           ? 'Desativar Modo TV'

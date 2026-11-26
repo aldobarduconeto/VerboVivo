@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../../controllers/journal_controller.dart';
 import '../../controllers/reading_library_controller.dart';
+import '../../controllers/reading_plan_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../services/app_localizations.dart';
 import '../../services/bible_service.dart';
 import '../../widgets/tv_focusable.dart';
 import '../chapter/chapter_view.dart';
 import '../journal/journal_view.dart';
+import '../reading_plan/reading_plan_view.dart';
 
 class BibleView extends StatefulWidget {
   const BibleView({super.key});
@@ -82,19 +84,42 @@ class _BibleViewState extends State<BibleView> {
 
   Widget _buildReadingLibrary(AppStrings strings) {
     final colors = Theme.of(context).colorScheme;
+    final plans = ReadingPlanController.instance;
 
     return ListenableBuilder(
-      listenable: Listenable.merge([_library, JournalController.instance]),
+      listenable: Listenable.merge([_library, JournalController.instance, plans]),
       builder: (context, _) {
         final lastRead = _library.lastRead;
         final prayers = JournalController.instance.activePrayers.length;
         final highlights = JournalController.instance.allHighlights.length;
+        final activePlan = plans.activePlan;
+        final planProgress = (plans.getProgress(activePlan.id) * 100).toInt();
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 20),
           child: Card(
             child: Column(
               children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.calendar_month_rounded, size: 20, color: Colors.teal),
+                  ),
+                  title: const Text('Planos de Leitura Bíblica', style: TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text('${activePlan.title} • $planProgress% concluído'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ReadingPlanView(),
+                      ),
+                    );
+                  },
+                ),
                 if (lastRead != null)
                   ListTile(
                     leading: Container(

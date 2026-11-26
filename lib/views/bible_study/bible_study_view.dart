@@ -10,6 +10,8 @@ import '../../widgets/responsive_media_grid.dart';
 import '../../widgets/tv_focusable.dart';
 import '../../widgets/video_card.dart';
 import '../chapter/chapter_view.dart';
+import '../../services/daily_verse_service.dart';
+import '../daily_verse/daily_verse_card.dart';
 import '../devotional/devotional_banner_card.dart';
 import '../family/worship_ambient_view.dart';
 import '../player/player_view.dart';
@@ -107,6 +109,7 @@ class _BibleStudyViewState extends State<BibleStudyView> {
             child: ListView(
               padding: EdgeInsets.fromLTRB(margin, 16, margin, 32),
               children: [
+                DailyVerseCard(verse: DailyVerseService.getTodayVerse()),
                 const DevotionalBannerCard(),
                 const SizedBox(height: 18),
                 ExploreIntro(
