@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag de versão para o release (ex: v1.0.0)'
+        required: false
+        default: 'v1.0.0'
 
 permissions:
   contents: write
@@ -54,8 +60,11 @@ jobs:
           APP_NAME="verbovivo"
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ -n "${{ github.event.inputs.tag_name }}" ]]; then
+            VERSION="${{ github.event.inputs.tag_name }}"
+            VERSION="${VERSION#v}"
           else
-            VERSION=$(awk '/^version:[[:space:]]/ { print $2; exit }' pubspec.yaml)
+            VERSION=$(awk '/^version:[[:space:]]/ { print $2; exit }' pubspec.yaml | cut -d'+' -f1)
           fi
           if ! dpkg --validate-version "$VERSION"; then
             echo "::error::Invalid Debian package version: $VERSION"
@@ -129,9 +138,17 @@ jobs:
       - name: Create Inno Setup Script & Compile Installer
         shell: pwsh
         run: |
-          $version = $env:GITHUB_REF_NAME.TrimStart('v')
-          if ($env:GITHUB_REF_TYPE -ne 'tag' -or $version -notmatch '^\d+\.\d+\.\d+([+-][0-9A-Za-z.-]+)?$') {
-            throw "Release exige uma tag de versão como v1.2.3; recebida: $env:GITHUB_REF_NAME"
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME.TrimStart('v') -match '^\d+\.\d+\.\d+') {
+            $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          } elseif ('${{ github.event.inputs.tag_name }}') {
+            $version = ('${{ github.event.inputs.tag_name }}').TrimStart('v')
+          } else {
+            $versionLine = Get-Content pubspec.yaml | Where-Object { $_ -match '^version:\s*([^\+]+)' } | Select-Object -First 1
+            if ($versionLine -match '^version:\s*([^\+]+)') {
+              $version = $matches[1].Trim()
+            } else {
+              $version = "1.0.0"
+            }
           }
           $issContent = @"
           [Setup]
@@ -242,8 +259,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: Release ${{ github.event.inputs.tag_name || github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
