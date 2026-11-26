@@ -6,7 +6,6 @@ class DailyVerseService {
   static const List<DailyVerse> _verses = [
     DailyVerse(
       id: 'dv-1',
-      date: null as dynamic,
       reference: 'Filipenses 4:13',
       verseText: 'Tudo posso naquele que me fortalece.',
       theme: 'Força & Vitória',
@@ -16,7 +15,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-2',
-      date: null as dynamic,
       reference: 'Jeremias 29:11',
       verseText: 'Porque eu bem sei os pensamentos que penso de vós, diz o Senhor; pensamentos de paz e não de mal, para vos dar o fim que esperais.',
       theme: 'Futuro & Esperança',
@@ -26,7 +24,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-3',
-      date: null as dynamic,
       reference: 'Salmos 46:1',
       verseText: 'Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.',
       theme: 'Refúgio & Segurança',
@@ -36,7 +33,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-4',
-      date: null as dynamic,
       reference: 'Isaías 40:31',
       verseText: 'Mas os que esperam no Senhor renovarão as suas forças; subirão com asas como águias; correrão e não se cansarão; caminharão e não se fatigarão.',
       theme: 'Renovo & Perseverança',
@@ -46,7 +42,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-5',
-      date: null as dynamic,
       reference: 'Romanos 8:28',
       verseText: 'E sabemos que todas as coisas cooperam para o bem daqueles que amam a Deus, daqueles que são chamados segundo o seu propósito.',
       theme: 'Soberania Divina',
@@ -56,7 +51,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-6',
-      date: null as dynamic,
       reference: 'Josué 1:9',
       verseText: 'Não to mandei eu? Sê forte e corajoso; não temas, nem te espantes, porque o Senhor, teu Deus, é contigo por onde quer que andares.',
       theme: 'Coragem & Fé',
@@ -66,7 +60,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-7',
-      date: null as dynamic,
       reference: 'Salmos 23:1',
       verseText: 'O Senhor é o meu pastor; nada me faltará.',
       theme: 'Cuidado & Provisão',
@@ -76,7 +69,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-8',
-      date: null as dynamic,
       reference: 'Provérbios 3:5-6',
       verseText: 'Confia no Senhor de todo o teu coração e não te estribes no teu próprio entendimento. Reconhece-o em todos os teus caminhos, e ele endireitará as tuas veredas.',
       theme: 'Direção & Sabedoria',
@@ -86,7 +78,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-9',
-      date: null as dynamic,
       reference: 'Mateus 11:28',
       verseText: 'Vinde a mim, todos os que estais cansados e oprimidos, e eu vos aliviarei.',
       theme: 'Descanso na Alma',
@@ -96,7 +87,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-10',
-      date: null as dynamic,
       reference: 'Lamentações 3:22-23',
       verseText: 'As misericórdias do Senhor são a causa de não sermos consumidos, porque as suas misericórdias não têm fim; renovam-se cada manhã; grande é a tua fidelidade.',
       theme: 'Graça & Fidelidade',
@@ -106,7 +96,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-11',
-      date: null as dynamic,
       reference: '2 Timóteo 1:7',
       verseText: 'Porque Deus não nos deu o espírito de temor, mas de fortaleza, de amor e de moderação.',
       theme: 'Ousadia & Autodomínio',
@@ -116,7 +105,6 @@ class DailyVerseService {
     ),
     DailyVerse(
       id: 'dv-12',
-      date: null as dynamic,
       reference: 'Salmos 121:1-2',
       verseText: 'Levantarei os meus olhos para os montes: de onde me virá o socorro? O meu socorro vem do Senhor, que fez o céu e a terra.',
       theme: 'Socorro dos Céus',

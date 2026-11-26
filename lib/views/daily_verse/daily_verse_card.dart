@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../../controllers/journal_controller.dart';
 import '../../controllers/settings_controller.dart';
 import '../../models/daily_verse_model.dart';
-import '../../models/bible_model.dart';
 import '../../widgets/tv_focusable.dart';
 import '../chapter/chapter_view.dart';
 import '../verse_studio/verse_studio_sheet.dart';
@@ -29,14 +28,10 @@ class DailyVerseCard extends StatelessWidget {
   }
 
   void _openVerseStudio(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => VerseStudioSheet(
-        verse: BibleVerse(verse.verseNumber, verse.verseText),
-        chapterReference: verse.chapterReference,
-      ),
+    VerseStudioSheet.show(
+      context,
+      reference: verse.reference,
+      text: verse.verseText,
     );
   }
 
